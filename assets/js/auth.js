@@ -218,23 +218,56 @@ const HMSAuth = (function () {
     return u.permissions.includes(permCode) || u.permissions.includes('*');
   }
 
-  function login(role, email, password, customName = '', customAvatar = '', backendPermissions = null, isSuperAdminUser = false, customId = null) {
+  function login(role, email, password, customName = '', customAvatar = '', backendPermissions = null, isSuperAdminUser = false, customId = null, customPhone = '') {
     const roleKey = normalizeRoleKey(role);
     const profile = DEFAULT_PROFILES[roleKey] || DEFAULT_PROFILES['Admin'];
 
-    const finalName = customName || profile.name;
-    const finalAvatar = customAvatar || profile.avatar;
+    const isDemoChandana = Boolean(email && email.toLowerCase().includes('chandana'));
+
+    // Resolve name: prioritize customName, then derived name from email, else profile default
+    let finalName = customName;
+    if (!finalName) {
+      if (roleKey === 'Patient' && email && !isDemoChandana) {
+        finalName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      } else {
+        finalName = profile.name;
+      }
+    }
+
+    // Resolve Patient ID
+    let finalId = customId;
+    if (!finalId) {
+      if (roleKey === 'Patient' && email && !isDemoChandana) {
+        const hash = Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 9000 + 1000;
+        finalId = `PAT-2026-${hash}`;
+      } else {
+        finalId = profile.id;
+      }
+    }
+
+    // Resolve Avatar
+    let finalAvatar = customAvatar;
+    if (!finalAvatar) {
+      if (roleKey === 'Patient' && email && !isDemoChandana) {
+        finalAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(finalName)}&background=059669&color=fff&bold=true`;
+      } else {
+        finalAvatar = profile.avatar;
+      }
+    }
+
     const finalPerms = Array.isArray(backendPermissions) && backendPermissions.length > 0 
       ? backendPermissions 
       : profile.permissions;
 
     const user = {
       ...profile,
-      id: customId || profile.id,
+      id: finalId,
+      patientId: roleKey === 'Patient' ? finalId : undefined,
       role: profile.role,
       roleSlug: profile.roleSlug,
       name: finalName,
       email: email || profile.email,
+      phone: customPhone || profile.phone || '',
       avatar: finalAvatar,
       isSuperAdmin: isSuperAdminUser || profile.isSuperAdmin,
       permissions: finalPerms

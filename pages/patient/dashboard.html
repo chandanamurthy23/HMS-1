@@ -370,44 +370,85 @@
     document.addEventListener('DOMContentLoaded', () => {
       let user = HMSAuth.getCurrentUser();
       
-      // Look up patient profile in HMSDataStore if registered
+      // 1. Look up patient profile in HMSDataStore if registered
       let patientData = null;
-      if (typeof HMSDataStore !== 'undefined') {
-        const patients = HMSDataStore.getCollection('patients');
-        if (user && user.email) {
-          patientData = patients.find(p => p.email && p.email.toLowerCase() === user.email.toLowerCase());
-        }
-        if (!patientData && user && user.name && user.name.toLowerCase().includes('chandana')) {
-          patientData = patients.find(p => p.name && p.name.toLowerCase().includes('chandana'));
-        }
-        if (!patientData && (!user || user.role === 'Patient')) {
-          patientData = patients.find(p => p.id === 'H1278') || patients[0];
+      if (typeof HMSDataStore !== 'undefined' && user && user.email) {
+        const patients = HMSDataStore.getCollection('patients') || [];
+        patientData = patients.find(p => p.email && p.email.toLowerCase() === user.email.toLowerCase());
+        if (!patientData && user.id) {
+          patientData = patients.find(p => p.id === user.id);
         }
       }
 
-      const displayName = (patientData && patientData.name) || (user && user.name && user.name !== 'Patient' ? user.name : 'chandanap');
-      const displayId = (patientData && patientData.id) || (user && user.id && user.id !== 'PAT-2026-001' ? user.id : 'H1278');
-      const displayEmail = (patientData && patientData.email) || (user && user.email && !user.email.includes('example.com') ? user.email : 'chandanap.murthy@gmail.com');
-      const displayPhone = (patientData && patientData.phone) || (user && user.phone ? user.phone : '+91 98450 12345');
-      const displayBlood = (patientData && patientData.bloodGroup) || 'A+';
+      const isDemoChandana = Boolean(user && user.email && user.email.toLowerCase().includes('chandana'));
 
+      // 2. Resolve display name: prioritize real user name, then patient record, then email prefix
+      let displayName = '';
+      if (user && user.name && user.name !== 'Patient' && user.name !== 'Super Admin') {
+        displayName = user.name;
+      } else if (patientData && patientData.name) {
+        displayName = patientData.name;
+      } else if (user && user.email) {
+        const prefix = user.email.split('@')[0].replace(/[._-]/g, ' ');
+        displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+      } else {
+        displayName = 'chandanap';
+      }
+
+      // 3. Resolve display email
+      const displayEmail = (user && user.email) || (patientData && patientData.email) || 'patient@hms.com';
+
+      // 4. Resolve Patient ID
+      let displayId = '';
+      if (patientData && patientData.id) {
+        displayId = patientData.id;
+      } else if (user && user.patientId) {
+        displayId = user.patientId;
+      } else if (user && user.id && typeof user.id === 'string' && (user.id.startsWith('PAT-') || user.id.startsWith('H'))) {
+        displayId = user.id;
+      } else if (user && user.id && !isNaN(user.id)) {
+        displayId = `PAT-2026-${String(user.id).padStart(3, '0')}`;
+      } else if (isDemoChandana) {
+        displayId = 'H1278';
+      } else {
+        const hash = Math.abs(displayEmail.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 9000 + 1000;
+        displayId = `PAT-2026-${hash}`;
+      }
+
+      // 5. Resolve Phone & Blood Group
+      const displayPhone = (user && user.phone) || (patientData && patientData.phone) || '+91 98450 12345';
+      const displayBlood = (patientData && patientData.bloodGroup) || (user && user.bloodGroup) || 'A+';
+
+      // 6. Update DOM Elements
       const nameEl = document.getElementById('patientNameHeader');
       if (nameEl) nameEl.textContent = displayName;
 
       const avatarEl = document.getElementById('patientAvatarHeader');
-      if (avatarEl && user && user.avatar) avatarEl.src = user.avatar;
+      if (avatarEl) {
+        if (user && user.avatar && !user.avatar.includes('admin.jpg')) {
+          avatarEl.src = user.avatar;
+        } else if (patientData && patientData.avatar) {
+          avatarEl.src = patientData.avatar;
+        } else if (isDemoChandana) {
+          avatarEl.src = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256';
+        } else {
+          avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=059669&color=fff&bold=true`;
+        }
+      }
 
       const subEl = document.getElementById('patientSubHeader');
       if (subEl) {
         subEl.innerHTML = `Patient ID: <strong>${displayId}</strong> • Email: <strong>${displayEmail}</strong> • Blood Group: <strong>${displayBlood}</strong>`;
       }
 
-      // Sync active user in session / localStorage
-      if (user && user.role === 'Patient') {
+      // 7. Sync active user in session / localStorage
+      if (user) {
         user.name = displayName;
         user.id = displayId;
+        user.patientId = displayId;
         user.email = displayEmail;
         user.phone = displayPhone;
+        user.bloodGroup = displayBlood;
         HMSAuth.setCurrentUser(user);
       }
 

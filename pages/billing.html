@@ -417,7 +417,25 @@
 
       // Populate patient select dropdown
       const pSel = document.getElementById('billPatientSelect');
-      const targetId = allPatients.some(p => p.id === 'H1278') ? 'H1278' : (allPatients[0]?.id || 'H1268');
+      const currentUser = HMSAuth.getCurrentUser();
+      
+      if (currentUser && currentUser.role === 'Patient' && !allPatients.some(p => p.id === currentUser.id)) {
+        allPatients.unshift({
+          id: currentUser.id,
+          name: currentUser.name,
+          email: currentUser.email,
+          phone: currentUser.phone || '+91 98450 12345',
+          age: 30,
+          gender: 'General',
+          bloodGroup: currentUser.bloodGroup || 'A+'
+        });
+      }
+
+      let targetId = (currentUser && currentUser.role === 'Patient' && currentUser.id) ? currentUser.id : null;
+      if (!targetId || !allPatients.some(p => p.id === targetId)) {
+        targetId = allPatients.some(p => p.id === 'H1278') ? 'H1278' : (allPatients[0]?.id || 'H1268');
+      }
+
       pSel.innerHTML = allPatients.map(p => `
         <option value="${p.id}" ${p.id === targetId ? 'selected' : ''}>
           ${p.name} (${p.id})

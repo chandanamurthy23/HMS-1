@@ -640,12 +640,16 @@
         if (typeof HMSAuth !== 'undefined') {
           let customId = null;
           if (typeof HMSDataStore !== 'undefined') {
-            const patients = HMSDataStore.getCollection('patients');
+            const patients = HMSDataStore.getCollection('patients') || [];
             const foundP = patients.find(p => p.email && p.email.toLowerCase() === user.email.toLowerCase());
             if (foundP) customId = foundP.id;
           }
-          if (!customId && user.role && user.role.toLowerCase() === 'patient') {
-            customId = 'H1278';
+          if (!customId) {
+            if (user.email && user.email.toLowerCase().includes('chandana')) {
+              customId = 'H1278';
+            } else if (user.id) {
+              customId = `PAT-2026-${String(user.id).padStart(3, '0')}`;
+            }
           }
           HMSAuth.login(
             user.role,
@@ -655,7 +659,8 @@
             user.avatar,
             user.permissions,
             user.is_super_admin,
-            customId
+            customId,
+            user.phone
           );
         }
 
@@ -684,10 +689,15 @@
 
         let customName = '';
         let customId = null;
-        if (targetRole.toLowerCase() === 'patient' || lowerEmail.includes('chandanap')) {
+        if (lowerEmail.includes('chandanap') || lowerEmail.includes('chandana')) {
           targetRole = 'Patient';
           customName = 'chandanap';
           customId = 'H1278';
+        } else if (targetRole.toLowerCase() === 'patient') {
+          const namePart = email.split('@')[0].replace(/[._-]/g, ' ');
+          customName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+          const hash = Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 9000 + 1000;
+          customId = `PAT-2026-${hash}`;
         }
 
         HMSAuth.login(
@@ -753,8 +763,19 @@
 
         if (resp.ok && data && data.success) {
           const user = data.user;
+          const patientId = `PAT-2026-${String(user.id || Math.floor(Math.random() * 899 + 100)).padStart(3, '0')}`;
           if (typeof HMSAuth !== 'undefined') {
-            HMSAuth.login(user.role, user.email, pwd, user.name, user.avatar, user.permissions, user.is_super_admin);
+            HMSAuth.login(
+              user.role,
+              user.email,
+              pwd,
+              user.name,
+              user.avatar,
+              user.permissions,
+              user.is_super_admin,
+              patientId,
+              user.phone || phone
+            );
           }
           btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Redirecting...';
           setTimeout(() => {
