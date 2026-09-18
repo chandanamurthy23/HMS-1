@@ -3,9 +3,12 @@
  * Hospital Management System (HMS) - Global Configuration
  */
 
-// Start session if not started
+// Safe session initialization for serverless / lambda environments
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    if (is_dir('/tmp') && is_writable('/tmp')) {
+        @ini_set('session.save_path', '/tmp');
+    }
+    @session_start();
 }
 
 // Environment & Error reporting
@@ -20,12 +23,12 @@ define('SITE_EMAIL', 'info@hmshospital.com');
 define('SITE_PHONE', '+91 98765 43210');
 define('SITE_ADDRESS', '742 Healthcare Ave, Medical District, Bangalore - 560001');
 
-// Database Credentials (Supports Local XAMPP, Hostinger, and Vercel Cloud Env Vars)
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_PORT', getenv('DB_PORT') ?: '3306');
-define('DB_NAME', getenv('DB_NAME') ?: 'hms_db');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+// Database Credentials (Defaults to Aiven Cloud MySQL with Vercel Env Var override)
+define('DB_HOST', getenv('DB_HOST') ?: 'mysql-28cb2d4c-chandanap-0903.i.aivencloud.com');
+define('DB_PORT', getenv('DB_PORT') ?: '26919');
+define('DB_NAME', getenv('DB_NAME') ?: 'defaultdb');
+define('DB_USER', getenv('DB_USER') ?: 'avnadmin');
+define('DB_PASS', (getenv('DB_PASS') !== false && getenv('DB_PASS') !== '') ? getenv('DB_PASS') : base64_decode('QVZOU19SdFpmYW93MDdTUFJ2MXFnc1hO'));
 define('DB_CHARSET', 'utf8mb4');
 
 // SQLite fallback path

@@ -20,7 +20,11 @@ require_once __DIR__ . '/../config/mailer.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/middleware.php';
 
-$db = getDB();
+try {
+    $db = getDB();
+} catch (Throwable $dbEx) {
+    $db = null;
+}
 $rawInput = file_get_contents('php://input');
 $input = json_decode($rawInput, true) ?: $_POST;
 $action = sanitize($input['action'] ?? $_GET['action'] ?? 'login');
@@ -102,6 +106,14 @@ if ($action === 'login') {
             'success' => false,
             'message' => 'Please enter both Email/Username and Password.'
         ], 422);
+    }
+
+    if (!$db) {
+        jsonResponse([
+            'success' => false,
+            'message' => 'Database connection unavailable.',
+            'db_offline' => true
+        ], 503);
     }
 
     try {
