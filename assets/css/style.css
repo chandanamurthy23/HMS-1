@@ -1107,3 +1107,87 @@ h1, h2, h3, h4, h5, h6,
   }
 }
 
+/* ================= ACCESSIBILITY & HIGH-CONTRAST TOKENS ================= */
+.text-purple { color: #7c3aed !important; }
+.text-teal { color: #0d9488 !important; }
+.text-cyan { color: #0284c7 !important; }
+.text-indigo { color: #4f46e5 !important; }
+.text-info { color: #0284c7 !important; }
+
+.bg-purple-subtle { background-color: #ede9fe !important; }
+.border-purple-subtle { border-color: #ddd6fe !important; }
+.bg-info-subtle { background-color: #e0f2fe !important; }
+.border-info-subtle { border-color: #bae6fd !important; }
+.bg-teal-subtle { background-color: #ccfbf1 !important; }
+.border-teal-subtle { border-color: #99f6e4 !important; }
+
+/* Accessible badges - prevent white text on light backgrounds */
+.badge.bg-light,
+.badge-light {
+  color: #0f172a !important;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  font-weight: 600;
+}
+.badge.text-dark {
+  color: #0f172a !important;
+}
+.badge.text-muted {
+  color: #334155 !important;
+}
+.badge.text-secondary {
+  color: #334155 !important;
+}
+.badge.bg-info-subtle,
+.badge.text-info {
+  color: #0369a1 !important;
+}
+.badge.bg-warning-subtle,
+.badge.text-warning {
+  color: #92400e !important;
+}
+.badge.bg-success-subtle,
+.badge.text-success {
+  color: #166534 !important;
+}
+.badge.bg-danger-subtle,
+.badge.text-danger {
+  color: #991b1b !important;
+}
+.badge.bg-primary-subtle,
+.badge.text-primary {
+  color: #1d4ed8 !important;
+}
+
+/* Table headers - guaranteed high contrast dark text */
+.table thead th,
+.table-light th,
+thead.table-light th,
+.table th {
+  color: #0f172a !important;
+  background-color: #f8fafc;
+  font-weight: 700 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+}
+
+/* High contrast demo role buttons on login */
+.demo-role-btn {
+  font-size: 0.75rem;
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1px solid #94a3b8;
+  background: #f8fafc;
+  color: #0f172a !important;
+  cursor: pointer;
+  margin: 2px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.demo-role-btn:hover,
+.demo-role-btn:focus {
+  background: #0d6efd !important;
+  color: #ffffff !important;
+  border-color: #0d6efd !important;
+}
+
+
