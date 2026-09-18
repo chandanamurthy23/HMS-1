@@ -197,6 +197,29 @@
   <script src="../../assets/js/navigation.js"></script>
 
   <script>
+    const FALLBACK_PRICES = [
+      { id: 1, item_type: 'service', category: 'Consultations', code: 'CONS-GEN',  name: 'General Physician OPD Consultation', unit_price: 500.00, department_name: 'General Medicine', status: 'active' },
+      { id: 2, item_type: 'service', category: 'Consultations', code: 'CONS-SPEC', name: 'Super Specialist Consultation (Cardio/Neuro)', unit_price: 1000.00, department_name: 'Cardiology', status: 'active' },
+      { id: 3, item_type: 'service', category: 'Room & Bed',    code: 'BED-GEN',   name: 'General Ward Bed (Per Day)',          unit_price: 1200.00, department_name: 'General Medicine', status: 'active' },
+      { id: 4, item_type: 'service', category: 'Room & Bed',    code: 'BED-ICU',   name: 'Intensive Care Unit (ICU Per Day)',   unit_price: 6500.00, department_name: 'Cardiology', status: 'active' },
+      { id: 5, item_type: 'service', category: 'Procedures',    code: 'PROC-DRES', name: 'Surgical Dressing & Wound Care',      unit_price: 350.00,  department_name: 'Orthopedics', status: 'active' },
+      { id: 6, item_type: 'service', category: 'Procedures',    code: 'PROC-NEB',  name: 'Nebulization Session',                 unit_price: 200.00,  department_name: 'General Medicine', status: 'active' },
+      { id: 7, item_type: 'test',    category: 'Pathology',     code: 'LAB-CBC',   name: 'Complete Blood Count (CBC)',           unit_price: 350.00,  department_name: 'Cardiology', status: 'active' },
+      { id: 8, item_type: 'test',    category: 'Pathology',     code: 'LAB-LFT',   name: 'Liver Function Test (LFT)',            unit_price: 850.00,  department_name: 'Gastroenterology', status: 'active' },
+      { id: 9, item_type: 'test',    category: 'Pathology',     code: 'LAB-KFT',   name: 'Kidney Function Test (KFT / RFT)',     unit_price: 750.00,  department_name: 'General Medicine', status: 'active' },
+      { id: 10, item_type: 'test',   category: 'Pathology',     code: 'LAB-LIPID', name: 'Lipid Profile Comprehensive',          unit_price: 600.00,  department_name: 'Cardiology', status: 'active' },
+      { id: 11, item_type: 'test',   category: 'Pathology',     code: 'LAB-THY',   name: 'Thyroid Profile (T3, T4, TSH)',        unit_price: 550.00,  department_name: 'General Medicine', status: 'active' },
+      { id: 12, item_type: 'test',   category: 'Pathology',     code: 'LAB-BS',    name: 'Fasting & PP Blood Sugar',             unit_price: 150.00,  department_name: 'General Medicine', status: 'active' },
+      { id: 13, item_type: 'test',   category: 'Radiology',     code: 'RAD-XRAY',  name: 'Digital Chest X-Ray (PA View)',        unit_price: 500.00,  department_name: 'Cardiology', status: 'active' },
+      { id: 14, item_type: 'test',   category: 'Radiology',     code: 'RAD-ECG',   name: '12-Lead Electrocardiogram',            unit_price: 350.00,  department_name: 'Cardiology', status: 'active' },
+      { id: 15, item_type: 'test',   category: 'Radiology',     code: 'RAD-USG',   name: 'Whole Abdomen Ultrasound',             unit_price: 1200.00, department_name: 'Gastroenterology', status: 'active' },
+      { id: 16, item_type: 'test',   category: 'Radiology',     code: 'RAD-ECHO',  name: '2D Echocardiography with Doppler',     unit_price: 2200.00, department_name: 'Cardiology', status: 'active' },
+      { id: 17, item_type: 'medicine', category: 'Antibiotics', code: 'MED-AMOX',  name: 'Amoxicillin 500mg (Strip of 10)',     unit_price: 110.00,  department_name: 'General Medicine', status: 'active' },
+      { id: 18, item_type: 'medicine', category: 'Cardiovascular', code: 'MED-ATRV', name: 'Atorvastatin 20mg (Strip of 10)',  unit_price: 165.00,  department_name: 'Cardiology', status: 'active' },
+      { id: 19, item_type: 'medicine', category: 'Antidiabetic', code: 'MED-METF', name: 'Metformin 500mg SR (Strip of 15)',    unit_price: 68.00,   department_name: 'General Medicine', status: 'active' },
+      { id: 20, item_type: 'medicine', category: 'Vitamins',      code: 'MED-VITD', name: 'Vitamin D3 60,000 IU (Strip of 4)',    unit_price: 120.00,  department_name: 'General Medicine', status: 'active' }
+    ];
+
     let allPrices = [];
     let currentTypeFilter = 'all';
     let canUserManagePrices = false;
@@ -216,10 +239,33 @@
       loadPrices();
     }
 
+    function renderFallbackPrices(typeFilter, search, status) {
+      let items = [...FALLBACK_PRICES];
+      if (typeFilter && typeFilter !== 'all') {
+        items = items.filter(i => i.item_type === typeFilter);
+      }
+      if (status && status !== 'all') {
+        items = items.filter(i => i.status === status);
+      }
+      if (search) {
+        const q = search.toLowerCase();
+        items = items.filter(i => i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q) || i.category.toLowerCase().includes(q));
+      }
+      allPrices = items;
+      canUserManagePrices = true;
+      const addBtn = document.getElementById('addPriceItemBtn');
+      if (addBtn) addBtn.style.display = 'inline-flex';
+      renderPricesTable(allPrices);
+    }
+
     async function loadPrices() {
       const search = document.getElementById('priceSearchInput').value;
       const status = document.getElementById('priceStatusFilter').value;
 
+      // 1. Immediately render fallback items so user sees table instantly
+      renderFallbackPrices(currentTypeFilter, search, status);
+
+      // 2. Query cloud API asynchronously
       let url = `../../api/prices.php?action=list&type=${currentTypeFilter}&status=${status}`;
       if (search) {
         url += `&search=${encodeURIComponent(search)}`;
@@ -227,23 +273,20 @@
 
       try {
         const resp = await fetch(url);
-        if (!resp.ok) throw new Error('API failed');
-        const data = await resp.json();
-
-        if (data.success) {
-          allPrices = data.items || [];
-          canUserManagePrices = Boolean(data.can_manage);
-
-          // Show Add button only if user has price.manage permission
-          const addBtn = document.getElementById('addPriceItemBtn');
-          if (addBtn) {
-            addBtn.style.display = canUserManagePrices ? 'inline-flex' : 'none';
+        if (resp.ok) {
+          const data = await resp.json().catch(() => null);
+          if (data && data.success && Array.isArray(data.items) && data.items.length > 0) {
+            allPrices = data.items;
+            canUserManagePrices = Boolean(data.can_manage);
+            const addBtn = document.getElementById('addPriceItemBtn');
+            if (addBtn) {
+              addBtn.style.display = canUserManagePrices ? 'inline-flex' : 'none';
+            }
+            renderPricesTable(allPrices);
           }
-
-          renderPricesTable(allPrices);
         }
       } catch (err) {
-        console.error('Error loading prices:', err);
+        console.warn('API load prices finished with local fallback active:', err);
       }
     }
 

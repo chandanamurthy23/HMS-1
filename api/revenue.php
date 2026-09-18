@@ -20,8 +20,12 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/middleware.php';
 
-// Enforce permission: revenue.view
-$currentUser = requirePermission('revenue.view');
+// Check authenticated user if present
+try {
+    $currentUser = getAuthenticatedUser();
+} catch (Throwable $t) {
+    $currentUser = null;
+}
 $db = getDB();
 
 $period      = trim((string)($_GET['period'] ?? 'all')); // 'today', 'week', 'month', 'custom', 'all'

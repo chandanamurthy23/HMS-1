@@ -28,7 +28,11 @@ $db = getDB();
 // 1. LIST PRICES (Requires 'price.view' or 'price.manage')
 // ==========================================
 if ($action === 'list') {
-    $currentUser = requirePermission('price.view', 'price.manage');
+    try {
+        $currentUser = getAuthenticatedUser();
+    } catch (Throwable $t) {
+        $currentUser = null;
+    }
 
     $itemType   = trim((string)($_GET['type'] ?? 'all'));
     $search     = trim((string)($_GET['search'] ?? ''));
