@@ -243,13 +243,7 @@
             <div class="mb-3">
               <label class="form-label small fw-semibold text-secondary">Select Patient <span class="text-danger">*</span></label>
               <select class="form-select" id="orderPatientSelect" required>
-                <option value="chandanap • H1278 • Female / 23y" selected>chandanap (H1278 - Female / 23y)</option>
-                <option value="Sneha R • H1268 • Female / 28y">Sneha R (H1268 - Female / 28y)</option>
-                <option value="Rahul K • H1042 • Male / 42y">Rahul K (H1042 - Male / 42y)</option>
-                <option value="Ananya P • H1105 • Female / 31y">Ananya P (H1105 - Female / 31y)</option>
-                <option value="David Chen • PAT-2026-003 • Male / 62y">David Chen (PAT-2026-003 - Male / 62y)</option>
-                <option value="Robert Harrison • PAT-2026-001 • Male / 48y">Robert Harrison (PAT-2026-001 - Male / 48y)</option>
-                <option value="Walk-in Patient • OPD-99 • Outpatient">Walk-in Outpatient</option>
+                <option value="Walk-in Patient • OPD-99 • Outpatient">Loading registered patients...</option>
               </select>
             </div>
 
@@ -317,9 +311,58 @@
       HMSNav.init('lab-portal', 'Laboratory Portal', ['Home', 'Departments', 'Laboratory'], 'lab.view');
       resultsModalInstance = new bootstrap.Modal(document.getElementById('resultsModal'));
       newOrderModalInstance = new bootstrap.Modal(document.getElementById('newSampleOrderModal'));
+      populateLabPatientsDropdown();
     });
 
+    async function populateLabPatientsDropdown() {
+      const pSelect = document.getElementById('orderPatientSelect');
+      if (!pSelect) return;
+      let patients = [];
+      try {
+        if (typeof HMSApi !== 'undefined' && HMSApi.patients) {
+          patients = await HMSApi.patients.getAll();
+        } else if (typeof HMSDataStore !== 'undefined') {
+          patients = HMSDataStore.getCollection('patients');
+        }
+      } catch (err) {
+        console.warn('Patient fetch notice:', err);
+      }
+
+      // Check registered patients list in localStorage
+      try {
+        const raw = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+        if (raw) {
+          const registered = JSON.parse(raw);
+          registered.forEach(r => {
+            if (!patients.some(p => p.id === r.id || (p.email && p.email.toLowerCase() === (r.email || '').toLowerCase()))) {
+              patients.unshift(r);
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Fallback if empty
+      if (!patients || patients.length === 0) {
+        patients = [
+          { name: 'Sneha R', id: 'H1268', gender: 'Female', age: 28 },
+          { name: 'Rahul K', id: 'H1042', gender: 'Male', age: 42 },
+          { name: 'Ananya P', id: 'H1105', gender: 'Female', age: 31 },
+          { name: 'David Chen', id: 'PAT-2026-003', gender: 'Male', age: 62 }
+        ];
+      }
+
+      let optionsHtml = '';
+      patients.forEach((p, idx) => {
+        const ageGender = `${p.gender || 'General'} / ${p.age || 26}y`;
+        const val = `${p.name} • ${p.id} • ${ageGender}`;
+        optionsHtml += `<option value="${val}" ${idx === 0 ? 'selected' : ''}>${p.name} (${p.id} - ${ageGender})</option>`;
+      });
+      optionsHtml += `<option value="Walk-in Patient • OPD-99 • Outpatient">Walk-in Outpatient</option>`;
+      pSelect.innerHTML = optionsHtml;
+    }
+
     function openNewLabOrderModal() {
+      populateLabPatientsDropdown();
       newOrderModalInstance.show();
     }
 

@@ -17,13 +17,51 @@ const HMSApi = (function () {
     // ================= PATIENTS =================
     patients: {
       async getAll() {
-        await delay(50);
-        return HMSDataStore.getCollection('patients');
+        await delay(30);
+        const basePatients = HMSDataStore.getCollection('patients');
+
+        let extraPatients = [];
+        try {
+          const raw = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+          if (raw) extraPatients = JSON.parse(raw);
+        } catch (e) {}
+
+        // Include current patient user if active
+        try {
+          const u = (typeof HMSAuth !== 'undefined') ? HMSAuth.getCurrentUser() : null;
+          if (u && (u.role === 'Patient' || u.roleKey === 'Patient') && u.id) {
+            if (!extraPatients.some(p => p.id === u.id) && !basePatients.some(p => p.id === u.id)) {
+              extraPatients.unshift({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                phone: u.phone || '+91 98765 00000',
+                age: 26,
+                dob: '2000-01-01',
+                gender: 'General',
+                bloodGroup: 'B+',
+                status: 'Active',
+                registeredDate: new Date().toISOString().split('T')[0]
+              });
+            }
+          }
+        } catch (e) {}
+
+        // Combine extra (registered) patients first, then base patients, deduplicating by ID or email
+        const combined = [...extraPatients, ...basePatients];
+        const seen = new Set();
+        return combined.filter(p => {
+          const key = (p.id || p.email || p.name || '').toLowerCase();
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
       },
 
       async getById(id) {
-        await delay(30);
-        return HMSDataStore.findItem('patients', 'id', id);
+        await delay(20);
+        const all = await this.getAll();
+        return all.find(p => String(p.id).toLowerCase() === String(id).toLowerCase()) || null;
       },
 
       async create(patientData) {

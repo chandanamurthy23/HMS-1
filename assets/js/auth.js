@@ -273,6 +273,45 @@ const HMSAuth = (function () {
       permissions: finalPerms
     };
 
+    if (roleKey === 'Patient' && finalId) {
+      try {
+        const pObj = {
+          id: finalId,
+          name: finalName,
+          age: profile.age || 26,
+          dob: profile.dob || '2000-01-01',
+          gender: profile.gender || 'General',
+          phone: customPhone || profile.phone || '+91 98765 00000',
+          email: email || profile.email,
+          address: 'Main Health Registry',
+          bloodGroup: profile.bloodGroup || 'B+',
+          emergencyContact: customPhone || profile.phone || '',
+          medicalHistory: 'Registered patient account',
+          status: 'Active',
+          registeredDate: new Date().toISOString().split('T')[0]
+        };
+
+        const rawList = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+        const list = rawList ? JSON.parse(rawList) : [];
+        const existingIdx = list.findIndex(p => p.id === finalId || (p.email && p.email.toLowerCase() === (email || '').toLowerCase()));
+        if (existingIdx !== -1) {
+          list[existingIdx] = { ...list[existingIdx], ...pObj };
+        } else {
+          list.unshift(pObj);
+        }
+        localStorage.setItem('HMS_REGISTERED_PATIENTS_LIST', JSON.stringify(list));
+
+        if (typeof HMSDataStore !== 'undefined') {
+          const dsPatients = HMSDataStore.getCollection('patients');
+          if (!dsPatients.some(p => p.id === finalId || (p.email && p.email.toLowerCase() === (email || '').toLowerCase()))) {
+            HMSDataStore.addItem('patients', pObj);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not register patient in local registry:', e);
+      }
+    }
+
     setCurrentUser(user);
     return user;
   }

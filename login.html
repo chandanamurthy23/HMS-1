@@ -768,6 +768,35 @@
         if (resp.ok && data && data.success) {
           const user = data.user;
           const patientId = `PAT-2026-${String(user.id || Math.floor(Math.random() * 899 + 100)).padStart(3, '0')}`;
+
+          const newPatientObj = {
+            id: patientId,
+            name: user.name,
+            age: 26,
+            dob: '2000-01-01',
+            gender: 'General',
+            phone: user.phone || phone || '+91 98765 00000',
+            email: user.email,
+            address: 'Main Health Registry',
+            bloodGroup: 'B+',
+            emergencyContact: user.phone || phone || '',
+            medicalHistory: 'Registered patient portal account',
+            status: 'Active',
+            registeredDate: new Date().toISOString().split('T')[0]
+          };
+
+          try {
+            const rawList = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+            const list = rawList ? JSON.parse(rawList) : [];
+            list.unshift(newPatientObj);
+            localStorage.setItem('HMS_REGISTERED_PATIENTS_LIST', JSON.stringify(list));
+            if (typeof HMSDataStore !== 'undefined') {
+              HMSDataStore.addItem('patients', newPatientObj);
+            }
+          } catch (e) {
+            console.warn('Local patient persistence notice:', e);
+          }
+
           if (typeof HMSAuth !== 'undefined') {
             HMSAuth.login(
               user.role,
