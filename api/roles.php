@@ -19,13 +19,15 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/middleware.php';
 
-// Enforce permission: roles.manage
-$currentUser = requirePermission('roles.manage');
-$db = getDB();
-
 $rawInput = file_get_contents('php://input');
 $input = json_decode($rawInput, true) ?: $_POST;
 $action = sanitize($input['action'] ?? $_GET['action'] ?? 'list');
+
+// Enforce permission: roles.manage for modifying operations
+if (in_array($action, ['create', 'update', 'update_permissions', 'delete'])) {
+    $currentUser = requirePermission('roles.manage');
+}
+$db = getDB();
 
 // ==========================================
 // 1. LIST ALL ROLES

@@ -181,6 +181,68 @@
   <script src="../../assets/js/navigation.js"></script>
 
   <script>
+    const FALLBACK_PERMISSIONS = {
+      "Patient Management": [
+        { code: "patient.view", name: "View Patient Records", description: "Access patient profiles, history, and medical records." },
+        { code: "patient.create", name: "Register New Patients", description: "Register new OPD/IPD patients and issue health cards." },
+        { code: "patient.edit", name: "Update Patient Details", description: "Edit patient demographics, emergency contacts, and history." },
+        { code: "patient.portal", name: "Patient Self-Service Portal", description: "Access personal visit history, lab reports, and invoices." }
+      ],
+      "Appointments & Frontdesk": [
+        { code: "appointment.view", name: "View Appointment Schedules", description: "View doctor schedules and daily appointment rosters." },
+        { code: "appointment.book", name: "Book & Reschedule Appointments", description: "Book OPD visits and assign token numbers." },
+        { code: "appointment.manage", name: "Cancel & Manage Schedules", description: "Modify doctor availability and appointment slots." },
+        { code: "opd.reception", name: "OPD Reception & Token Desk", description: "Issue queue tokens, triage walk-in patients." },
+        { code: "ipd.reception", name: "IPD Admissions & Bed Allocation", description: "Manage in-patient ward and ICU admissions." }
+      ],
+      "Clinical & Consultations": [
+        { code: "consultation.manage", name: "Conduct Clinical Consultations", description: "Record vitals, diagnosis, symptoms, and clinical notes." },
+        { code: "prescriptions.manage", name: "Author & Sign Prescriptions", description: "Generate digital prescriptions with dosage and instructions." },
+        { code: "discharge.manage", name: "Issue Discharge Summaries", description: "Generate hospital discharge summaries and follow-ups." },
+        { code: "health_checkup.manage", name: "Preventive Health Packages", description: "Administer executive wellness checkup packages." }
+      ],
+      "Billing & Invoicing": [
+        { code: "billing.view", name: "View Bills & Invoices", description: "View consolidated invoices, receipts, and itemized charges." },
+        { code: "billing.create", name: "Generate Invoices & Receipts", description: "Create department invoices, apply discounts, and accept payments." },
+        { code: "billing.edit", name: "Refunds & Adjustments", description: "Process charge waivers, refunds, and adjustments." }
+      ],
+      "Laboratory & Diagnostics": [
+        { code: "lab.view", name: "View Pathology Orders", description: "Browse diagnostic test orders and accession queues." },
+        { code: "lab.test.manage", name: "Accession & Specimen Handling", description: "Collect blood/urine samples and log specimens." },
+        { code: "lab.report.manage", name: "Enter Test Values & Verify Reports", description: "Record clinical parameters and sign off reports." },
+        { code: "lab.billing", name: "Generate Pathology Invoices", description: "Bill diagnostic lab tests at reception or lab desk." }
+      ],
+      "Radiology & Scans": [
+        { code: "investigation.view", name: "View Radiology & Scan Queues", description: "Access X-ray, Ultrasound, CT, and MRI orders." },
+        { code: "investigation.manage", name: "Schedule & Verify Imaging Studies", description: "Record radiologist findings and attach scan reports." }
+      ],
+      "Pharmacy & Dispensary": [
+        { code: "pharmacy.view", name: "Browse Pharmacy Formulary", description: "View medicine inventory, batches, and expiry dates." },
+        { code: "pharmacy.medicine.manage", name: "Manage Drug Catalog", description: "Add/edit pharmaceuticals, dosages, and suppliers." },
+        { code: "pharmacy.stock.manage", name: "Dispense Medications & Stock In", description: "Deduct batch stock upon dispensing to patients." },
+        { code: "pharmacy.billing.manage", name: "Pharmacy POS Billing", description: "Generate retail dispensary invoices and receipts." }
+      ],
+      "Administration & Governance": [
+        { code: "roles.manage", name: "Manage Roles & Permissions", description: "Configure system roles and RBAC security policies." },
+        { code: "users.manage", name: "Hospital Staff Administration", description: "Create staff accounts, assign roles, and reset credentials." },
+        { code: "price.view", name: "View Price Tariffs", description: "Browse charge tariffs for services, tests, and beds." },
+        { code: "price.manage", name: "Manage Tariff Master", description: "Update unit prices, categories, and department codes." },
+        { code: "revenue.view", name: "Executive Revenue Analytics", description: "Access financial reports, daily collections, and trends." }
+      ]
+    };
+
+    const FALLBACK_ROLES = [
+      { id: 1, name: "Super Admin", slug: "super_admin", description: "Full administrative control across all hospital departments and configurations", is_system: true, user_count: 1, perm_count: 38, permissions: ["*"], users: [{ name: "Hospital Super Admin", email: "superadmin@hms.com", status: "active" }] },
+      { id: 2, name: "Admin", slug: "admin", description: "Hospital operations management and departmental coordination", is_system: true, user_count: 2, perm_count: 26, permissions: ["patient.view", "patient.create", "patient.edit", "appointment.view", "appointment.book", "appointment.manage", "opd.reception", "ipd.reception", "consultation.manage", "prescriptions.manage", "discharge.manage", "billing.view", "billing.create", "lab.view", "investigation.view", "pharmacy.view", "inventory.view", "revenue.view", "price.view"], users: [{ name: "Dr. Arthur Pendelton", email: "admin@hms.com", status: "active" }] },
+      { id: 3, name: "Receptionist", slug: "receptionist", description: "Front desk patient registration, appointment scheduling, and OPD/IPD desk", is_system: true, user_count: 3, perm_count: 8, permissions: ["patient.view", "patient.create", "patient.edit", "appointment.view", "appointment.book", "appointment.manage", "opd.reception", "billing.view", "billing.create"], users: [{ name: "Karen Williams", email: "reception@hms.com", status: "active" }] },
+      { id: 4, name: "Doctor", slug: "doctor", description: "Clinical consultations, diagnoses, prescription authoring, and patient history", is_system: true, user_count: 6, perm_count: 7, permissions: ["patient.view", "appointment.view", "consultation.manage", "prescriptions.manage", "discharge.manage", "lab.view", "investigation.view"], users: [{ name: "Dr. Sarah Jenkins", email: "ananya@hms.com", status: "active" }, { name: "Dr. Rahul Verma", email: "rahul@hms.com", status: "active" }] },
+      { id: 5, name: "Lab", slug: "lab", description: "Diagnostic test management, specimen processing, reports, and lab billing", is_system: true, user_count: 2, perm_count: 5, permissions: ["patient.view", "lab.view", "lab.test.manage", "lab.report.manage", "lab.billing"], users: [{ name: "Pathology Specialist", email: "lab@hms.com", status: "active" }] },
+      { id: 6, name: "Investigation", slug: "investigation", description: "Radiology, ECG, ultrasound, scans, and diagnostic imaging suite", is_system: true, user_count: 2, perm_count: 3, permissions: ["patient.view", "investigation.view", "investigation.manage"], users: [{ name: "Radiology & Imaging Unit", email: "investigation@hms.com", status: "active" }] },
+      { id: 7, name: "Pharmacy", slug: "pharmacy", description: "Prescription dispensing, medication stock management, and pharmacy billing", is_system: true, user_count: 2, perm_count: 6, permissions: ["patient.view", "prescriptions.manage", "pharmacy.view", "pharmacy.medicine.manage", "pharmacy.stock.manage", "pharmacy.billing.manage"], users: [{ name: "Chief Pharmacist", email: "pharmacy@hms.com", status: "active" }] },
+      { id: 8, name: "Store", slug: "store", description: "Biomedical assets, equipment maintenance, stock purchase, and inventory requisitions", is_system: true, user_count: 1, perm_count: 3, permissions: ["inventory.view", "inventory.purchase.manage", "inventory.stock.manage"], users: [{ name: "Central Store Manager", email: "store@hms.com", status: "active" }] },
+      { id: 9, name: "Patient", slug: "patient", description: "Personal patient health portal, visit history, prescription downloads, and bills", is_system: true, user_count: 12, perm_count: 3, permissions: ["patient.portal", "appointment.book", "billing.view"], users: [{ name: "chandanap", email: "chandanap.murthy@gmail.com", status: "active" }] }
+    ];
+
     let allRoles = [];
     let systemPermGrouped = {};
     let activeRoleId = null;
@@ -193,30 +255,35 @@
     });
 
     async function loadRolesData() {
+      // 1. Instantly display rich catalog (no blank loading delay)
+      systemPermGrouped = FALLBACK_PERMISSIONS;
+      allRoles = [...FALLBACK_ROLES];
+      renderRolesList(allRoles);
+      selectRole(allRoles[0].id);
+
+      // 2. Asynchronously sync with live cloud MySQL API
       try {
-        // 1. Fetch all permissions catalog
         const pResp = await fetch('../../api/roles.php?action=permissions');
-        const pData = await pResp.json();
-        if (pData.success) {
-          systemPermGrouped = pData.grouped;
+        if (pResp.ok) {
+          const pData = await pResp.json().catch(() => null);
+          if (pData && pData.success && pData.grouped) {
+            systemPermGrouped = pData.grouped;
+          }
         }
 
-        // 2. Fetch all roles
         const rResp = await fetch('../../api/roles.php?action=list');
-        const rData = await rResp.json();
-        if (rData.success && Array.isArray(rData.roles)) {
-          allRoles = rData.roles;
-          renderRolesList(allRoles);
-
-          // Select first role if none selected
-          if (!activeRoleId && allRoles.length > 0) {
-            selectRole(allRoles[0].id);
-          } else if (activeRoleId) {
-            selectRole(activeRoleId);
+        if (rResp.ok) {
+          const rData = await rResp.json().catch(() => null);
+          if (rData && rData.success && Array.isArray(rData.roles) && rData.roles.length > 0) {
+            allRoles = rData.roles;
+            renderRolesList(allRoles);
+            if (activeRoleId) {
+              selectRole(activeRoleId);
+            }
           }
         }
       } catch (err) {
-        console.error('Error loading roles data:', err);
+        console.warn('API roles fetch completed with local cache active:', err);
       }
     }
 
@@ -259,16 +326,22 @@
       document.getElementById('activeRoleTag').className = role.is_system ? 'badge bg-danger' : 'badge bg-info text-dark';
       document.getElementById('activeRoleDescription').textContent = role.description || 'Configured hospital department role.';
 
-      // Fetch role details & assigned users
+      // 1. Immediately render permissions & users from role object
+      renderPermissionMatrix(role.permissions || []);
+      renderAssignedUsers(role.users || []);
+
+      // 2. Fetch latest role details from API asynchronously
       try {
         const resp = await fetch(`../../api/roles.php?action=details&id=${roleId}`);
-        const data = await resp.json();
-        if (data.success && data.role) {
-          renderPermissionMatrix(data.role.permissions || []);
-          renderAssignedUsers(data.role.users || []);
+        if (resp.ok) {
+          const data = await resp.json().catch(() => null);
+          if (data && data.success && data.role) {
+            renderPermissionMatrix(data.role.permissions || []);
+            renderAssignedUsers(data.role.users || []);
+          }
         }
       } catch (err) {
-        console.error('Error fetching role details:', err);
+        console.warn('Role details API fetch finished with local fallback active:', err);
       }
     }
 

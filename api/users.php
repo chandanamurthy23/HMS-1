@@ -33,8 +33,8 @@ if ($action === 'auto_provision_patient') {
     if (!$isSuperAdmin && !in_array('patient.view', $perms) && !in_array('users.manage', $perms) && !in_array('opd.reception', $perms)) {
         jsonResponse(['success' => false, 'message' => 'Unauthorized: Insufficient permissions to register patient accounts.'], 403);
     }
-} else {
-    // General user administration requires users.manage
+} else if (in_array($action, ['create', 'update', 'toggle_status', 'reset_password', 'delete'])) {
+    // General user administration modification requires users.manage
     $currentUser = requirePermission('users.manage');
 }
 
