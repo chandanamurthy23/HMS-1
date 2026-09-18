@@ -1190,4 +1190,21 @@ thead.table-light th,
   border-color: #0d6efd !important;
 }
 
+/* Dedicated Investigation high-contrast badge & text styling */
+.badge-investigation,
+[data-dept="Investigation"],
+.badge[data-dept="Investigation"] {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  border: 1px solid #bae6fd !important;
+  font-weight: 700 !important;
+}
+
+/* Fix for any badge or breadcrumb with white-on-light text */
+.breadcrumb-item.active {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+
 

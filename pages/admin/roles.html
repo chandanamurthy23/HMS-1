@@ -115,7 +115,7 @@
               <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-3 border-bottom">
                 <div>
                   <div class="d-flex align-items-center gap-2">
-                    <h4 class="fw-bold text-dark mb-0" id="activeRoleTitle">Super Admin</h4>
+                    <h4 class="fw-bold mb-0" id="activeRoleTitle" style="color: #0f172a !important;">Super Admin</h4>
                     <span class="badge bg-danger" id="activeRoleTag">System Role</span>
                   </div>
                   <p class="text-muted small mb-0 mt-1" id="activeRoleDescription">Full administrative control across all hospital departments.</p>
@@ -295,13 +295,13 @@
         const isCurrent = (r.id === activeRoleId);
         const activeClass = isCurrent ? 'active border-primary' : '';
         const systemTag = r.is_system 
-          ? `<span class="badge bg-light text-secondary border">Core</span>` 
-          : `<span class="badge bg-info-subtle text-info border border-info-subtle">Custom</span>`;
+          ? `<span class="badge fw-bold px-2 py-1" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">Core</span>` 
+          : `<span class="badge fw-bold px-2 py-1" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">Custom</span>`;
 
         return `
           <div class="role-card-item ${activeClass}" onclick="selectRole(${r.id})">
             <div class="d-flex align-items-center justify-content-between mb-1">
-              <strong class="text-dark">${escapeHtml(r.name)}</strong>
+              <strong class="fw-bold" style="color: #0f172a !important;">${escapeHtml(r.name)}</strong>
               ${systemTag}
             </div>
             <p class="text-muted small mb-2 text-truncate" title="${escapeHtml(r.description)}">${escapeHtml(r.description || 'Configured hospital role')}</p>

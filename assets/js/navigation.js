@@ -183,7 +183,7 @@ const HMSNav = (function () {
 
     const breadcrumbHtml = breadcrumbs.map((b, idx) => {
       const isLast = idx === breadcrumbs.length - 1;
-      return `<li class="breadcrumb-item ${isLast ? 'active text-primary fw-medium' : ''}">${b}</li>`;
+      return `<li class="breadcrumb-item ${isLast ? 'active fw-bold' : ''}" style="${isLast ? 'color: #0f172a !important;' : 'color: #64748b !important;'}">${b}</li>`;
     }).join('');
 
     const coreRolesList = [
@@ -199,11 +199,13 @@ const HMSNav = (function () {
     ];
 
     const roleDropdownItems = coreRolesList.map(r => {
-      const active = (currentUser.role === r.name) ? 'active fw-bold' : '';
+      const isCurrent = (currentUser.role === r.name);
+      const active = isCurrent ? 'active fw-bold' : '';
+      const textStyle = isCurrent ? 'color: #ffffff !important;' : 'color: #0f172a !important;';
       return `
         <li>
-          <a class="dropdown-item d-flex align-items-center gap-2 ${active}" href="javascript:void(0)" onclick="HMSNav.switchAndRefresh('${r.name}')">
-            <i class="bi ${r.icon} ${r.color}"></i> ${r.name}
+          <a class="dropdown-item d-flex align-items-center gap-2 ${active}" href="javascript:void(0)" onclick="HMSNav.switchAndRefresh('${r.name}')" style="${textStyle}">
+            <i class="bi ${r.icon} ${r.color}"></i> <span>${r.name}</span>
           </a>
         </li>
       `;

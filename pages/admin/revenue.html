@@ -120,38 +120,38 @@
         <div class="row g-3 mb-4">
           <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-              <div class="text-muted small mb-1 fw-semibold">OPD Revenue</div>
-              <h5 class="fw-bold mb-0" style="color: #0d6efd;" id="deptOPD">₹0</h5>
+              <div class="small mb-1 fw-bold" style="color: #0f172a !important;">OPD Revenue</div>
+              <h5 class="fw-bold mb-0" style="color: #0d6efd !important;" id="deptOPD">₹0</h5>
             </div>
           </div>
           <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-              <div class="text-muted small mb-1 fw-semibold">IPD Revenue</div>
-              <h5 class="fw-bold mb-0" style="color: #16a34a;" id="deptIPD">₹0</h5>
+              <div class="small mb-1 fw-bold" style="color: #0f172a !important;">IPD Revenue</div>
+              <h5 class="fw-bold mb-0" style="color: #16a34a !important;" id="deptIPD">₹0</h5>
             </div>
           </div>
           <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-              <div class="text-muted small mb-1 fw-semibold">Laboratory</div>
-              <h5 class="fw-bold mb-0" style="color: #7c3aed;" id="deptLab">₹0</h5>
+              <div class="small mb-1 fw-bold" style="color: #0f172a !important;">Laboratory</div>
+              <h5 class="fw-bold mb-0" style="color: #7c3aed !important;" id="deptLab">₹0</h5>
             </div>
           </div>
           <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-              <div class="text-muted small mb-1 fw-semibold">Investigation</div>
-              <h5 class="fw-bold mb-0" style="color: #0284c7;" id="deptInvestigation">₹0</h5>
+              <div class="small mb-1 fw-bold" style="color: #0f172a !important;">Investigation</div>
+              <h5 class="fw-bold mb-0" style="color: #0284c7 !important;" id="deptInvestigation">₹0</h5>
             </div>
           </div>
           <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-              <div class="text-muted small mb-1 fw-semibold">Pharmacy</div>
-              <h5 class="fw-bold mb-0" style="color: #0d9488;" id="deptPharmacy">₹0</h5>
+              <div class="small mb-1 fw-bold" style="color: #0f172a !important;">Pharmacy</div>
+              <h5 class="fw-bold mb-0" style="color: #0d9488 !important;" id="deptPharmacy">₹0</h5>
             </div>
           </div>
           <div class="col-6 col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-              <div class="text-muted small mb-1 fw-semibold">Other Services</div>
-              <h5 class="fw-bold mb-0" style="color: #475569;" id="deptOther">₹0</h5>
+              <div class="small mb-1 fw-bold" style="color: #0f172a !important;">Other Services</div>
+              <h5 class="fw-bold mb-0" style="color: #475569 !important;" id="deptOther">₹0</h5>
             </div>
           </div>
         </div>
@@ -527,7 +527,7 @@
             const val = values[i];
             const pct = totalRev > 0 ? Math.round((val / totalRev) * 100) : 0;
             return `<div class="d-flex justify-content-between align-items-center py-1 border-bottom" style="font-size: 0.8rem;">
-              <span><span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background: ${colors[i % colors.length]};"></span>${escapeHtml(r.department)}</span>
+              <span><span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background: ${colors[i % colors.length]};"></span><span class="fw-semibold" style="color: #0f172a !important;">${escapeHtml(r.department)}</span></span>
               <span class="fw-bold text-dark">₹${val.toLocaleString('en-IN')} <span class="text-muted fw-normal">(${pct}%)</span></span>
             </div>`;
           }).join('');
@@ -603,15 +603,15 @@
 
     function getDeptBadge(dept) {
       const map = {
-        'OPD': 'bg-primary-subtle text-primary border-primary-subtle',
-        'IPD': 'bg-success-subtle text-success border-success-subtle',
-        'Laboratory': 'bg-purple-subtle text-purple border-purple-subtle',
-        'Investigation': 'bg-info-subtle text-info border-info-subtle',
-        'Pharmacy': 'bg-warning-subtle text-dark border-warning-subtle',
-        'Other Services': 'bg-secondary-subtle text-secondary border-secondary-subtle'
+        'OPD':            { bg: '#dbeafe', color: '#1d4ed8', border: '#bfdbfe' },
+        'IPD':            { bg: '#dcfce7', color: '#166534', border: '#bbf7d0' },
+        'Laboratory':     { bg: '#f3e8ff', color: '#7e22ce', border: '#e9d5ff' },
+        'Investigation':  { bg: '#e0f2fe', color: '#0369a1', border: '#bae6fd' },
+        'Pharmacy':       { bg: '#fef3c7', color: '#92400e', border: '#fde68a' },
+        'Other Services': { bg: '#f1f5f9', color: '#334155', border: '#cbd5e1' }
       };
-      const cls = map[dept] || 'bg-light text-dark border';
-      return `<span class="badge ${cls} border fw-semibold px-2 py-1">${escapeHtml(dept)}</span>`;
+      const style = map[dept] || { bg: '#f1f5f9', color: '#0f172a', border: '#cbd5e1' };
+      return `<span class="badge fw-bold px-2 py-1" style="background-color: ${style.bg} !important; color: ${style.color} !important; border: 1px solid ${style.border} !important; font-size: 0.75rem;">${escapeHtml(dept)}</span>`;
     }
 
     function renderLedgerTable(transactions) {
