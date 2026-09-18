@@ -237,7 +237,7 @@ const HMSNav = (function () {
         <div class="dropdown">
           <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1 shadow-sm role-switcher-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch user role to test permissions">
             <i class="bi bi-person-gear"></i>
-            <span class="role-label d-none d-sm-inline">Role:</span> <strong>${currentUser.role}</strong>
+            <span class="role-label d-none d-md-inline">Role:</span> <strong class="role-name-text">${currentUser.role}</strong>
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 210px;">
             <li><h6 class="dropdown-header text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">Simulate Role View</h6></li>
@@ -251,7 +251,7 @@ const HMSNav = (function () {
             <i class="bi bi-bell fs-6 text-secondary"></i>
             <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
           </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow-lg py-0 border-0" style="width: 320px; font-size: 0.85rem;">
+          <ul class="dropdown-menu dropdown-menu-end shadow-lg py-0 border-0" style="width: min(320px, 88vw); font-size: 0.85rem;">
             <li class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
               <span class="fw-bold">Notifications</span>
               <span class="badge bg-primary rounded-pill">3 New</span>

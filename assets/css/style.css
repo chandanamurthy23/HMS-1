@@ -933,6 +933,12 @@ h1, h2, h3, h4, h5, h6,
     --hms-header-height: 60px;
   }
 
+  html, body, .hms-wrapper, .hms-main {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
   /* Prevent iOS automatic zoom on form input focus */
   input[type="text"],
   input[type="password"],
@@ -947,34 +953,39 @@ h1, h2, h3, h4, h5, h6,
   }
 
   .hms-header {
-    height: var(--hms-header-height);
-    padding: 0 0.85rem;
-    gap: 0.5rem;
+    height: var(--hms-header-height) !important;
+    padding: 0 0.85rem !important;
+    gap: 0.5rem !important;
+    box-sizing: border-box !important;
   }
 
   .hms-header-title {
     font-size: 1rem !important;
-    max-width: 160px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    max-width: clamp(120px, 40vw, 190px) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
   }
 
   .hms-content-body {
-    padding: 0.85rem 0.75rem 2.5rem;
+    padding: 1rem 0.75rem 2.5rem !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .hms-card {
-    border-radius: 10px;
-    margin-bottom: 1rem;
+    border-radius: 12px !important;
+    margin-bottom: 1rem !important;
   }
 
   .hms-card-header {
-    padding: 0.85rem 1rem;
+    padding: 0.85rem 1rem !important;
   }
 
   .hms-card-body {
-    padding: 1rem;
+    padding: 1rem !important;
   }
 
   /* Toast alerts on mobile */
@@ -1006,7 +1017,7 @@ h1, h2, h3, h4, h5, h6,
 
   /* Quick Actions & Buttons */
   .btn {
-    padding: 0.55rem 0.95rem;
+    padding: 0.5rem 0.85rem;
   }
 
   .btn-sm {
@@ -1030,32 +1041,65 @@ h1, h2, h3, h4, h5, h6,
 /* Extra Small Mobile Devices (< 576px) */
 @media (max-width: 575.98px) {
   .hms-header {
-    padding: 0 0.85rem !important;
+    padding: 0 0.65rem !important;
+    height: 58px !important;
+    gap: 0.35rem !important;
   }
 
   .hms-header-title {
-    max-width: clamp(140px, 42vw, 220px) !important;
-    font-size: 0.95rem !important;
+    max-width: clamp(105px, 35vw, 155px) !important;
+    font-size: 0.92rem !important;
+  }
+
+  .hms-content-body {
+    padding: 0.75rem 0.55rem 2rem !important;
   }
 
   .hms-card-header {
-    padding: 0.85rem 1rem !important;
-    gap: 0.6rem !important;
+    padding: 0.75rem 0.85rem !important;
+    gap: 0.5rem !important;
   }
 
   .hms-card-title {
-    font-size: 0.98rem !important;
+    font-size: 0.92rem !important;
     line-height: 1.3 !important;
   }
 
   .btn-sm {
-    padding: 0.32rem 0.6rem !important;
-    font-size: 0.785rem !important;
+    padding: 0.28rem 0.55rem !important;
+    font-size: 0.76rem !important;
+  }
+
+  /* Stat cards on extra-small mobile */
+  .stat-card {
+    padding: 0.85rem !important;
+    margin-bottom: 0.65rem !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.15rem !important;
+    margin-right: 0.65rem !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-value {
+    font-size: 1.35rem !important;
+  }
+
+  .stat-label {
+    font-size: 0.75rem !important;
+  }
+
+  .stat-trend {
+    font-size: 0.7rem !important;
+    flex-wrap: wrap !important;
   }
 
   .stat-card-pastel {
     padding: 0.75rem 0.85rem !important;
-    min-height: 82px !important;
+    min-height: 80px !important;
     margin-bottom: 0.5rem !important;
     gap: 0.2rem !important;
     border-radius: 12px !important;
@@ -1102,8 +1146,27 @@ h1, h2, h3, h4, h5, h6,
   }
 
   /* Role switcher pill on small header */
+  .role-switcher-btn {
+    padding: 0.25rem 0.45rem !important;
+    font-size: 0.72rem !important;
+  }
+
   .role-switcher-btn .role-label {
-    display: none;
+    display: none !important;
+  }
+
+  .role-switcher-btn strong,
+  .role-switcher-btn .role-name-text {
+    max-width: 60px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: inline-block !important;
+    vertical-align: bottom !important;
+  }
+
+  .card {
+    border-radius: 12px !important;
   }
 }
 
