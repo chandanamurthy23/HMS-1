@@ -7,9 +7,10 @@
   },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/login", "dest": "/login.html" },
+    { "src": "/website", "dest": "/index.html" },
     { "src": "/home", "dest": "/index.html" },
-    { "src": "/", "dest": "/index.html" },
+    { "src": "/login", "dest": "/login.html" },
+    { "src": "/", "dest": "/login.html" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
