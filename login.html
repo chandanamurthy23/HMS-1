@@ -551,6 +551,23 @@
       'Patient':       { email: 'chandanap.murthy@gmail.com', pwd: 'password123' }
     };
 
+    function quickLogin(roleName) {
+      const roleSelect = document.getElementById('roleSelect');
+      if (roleSelect) {
+        for (let opt of roleSelect.options) {
+          if (opt.value.toLowerCase() === roleName.toLowerCase() || opt.text.toLowerCase().includes(roleName.toLowerCase())) {
+            roleSelect.value = opt.value;
+            break;
+          }
+        }
+      }
+      handleRoleChange();
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      if (submitBtn) {
+        submitBtn.click();
+      }
+    }
+
     function handleRoleChange() {
       const role = document.getElementById('roleSelect').value;
       const emailInput = document.getElementById('usernameInput');
