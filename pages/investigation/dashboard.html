@@ -88,54 +88,8 @@
               </thead>
               <tbody id="investigationQueueBody">
                 <tr>
-                  <td class="ps-4 font-monospace fw-bold text-primary">INV-RAD-401</td>
-                  <td>
-                    <div class="fw-bold text-dark">Vikram Singh</div>
-                    <div class="text-muted small">PAT-2026-005 • Male / 55y</div>
-                  </td>
-                  <td>12-Lead Electrocardiogram (ECG)</td>
-                  <td><span class="badge bg-light text-dark border">Cardio Suite 102</span></td>
-                  <td>Dr. Sarah Jenkins</td>
-                  <td class="text-muted small">Today, 10:15 AM</td>
-                  <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle">Ready for Scan</span></td>
-                  <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-outline-info" onclick="recordScanModal('INV-RAD-401', 'Vikram Singh', '12-Lead ECG')">
-                      <i class="bi bi-camera-fill me-1"></i> Log Result
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-4 font-monospace fw-bold text-primary">INV-RAD-402</td>
-                  <td>
-                    <div class="fw-bold text-dark">Sneha R</div>
-                    <div class="text-muted small">H1268 • Female / 28y</div>
-                  </td>
-                  <td>Chest Digital X-Ray (PA View)</td>
-                  <td><span class="badge bg-light text-dark border">Radiology Bay 2</span></td>
-                  <td>Dr. Priya Sharma</td>
-                  <td class="text-muted small">Today, 10:45 AM</td>
-                  <td><span class="badge bg-info-subtle text-info border border-info-subtle">In Imaging</span></td>
-                  <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-outline-info" onclick="recordScanModal('INV-RAD-402', 'Sneha R', 'Chest X-Ray')">
-                      <i class="bi bi-camera-fill me-1"></i> Log Result
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-4 font-monospace fw-bold text-primary">INV-RAD-403</td>
-                  <td>
-                    <div class="fw-bold text-dark">James Wilson</div>
-                    <div class="text-muted small">PAT-2026-005 • Male / 55y</div>
-                  </td>
-                  <td>Ultrasound Whole Abdomen (USG)</td>
-                  <td><span class="badge bg-light text-dark border">Ultrasound Suite 3</span></td>
-                  <td>Dr. Gregory Hayes</td>
-                  <td class="text-muted small">Today, 09:30 AM</td>
-                  <td><span class="badge bg-success-subtle text-success border border-success-subtle">Verified</span></td>
-                  <td class="text-end pe-4">
-                    <a href="../documents.html" class="btn btn-sm btn-outline-success">
-                      <i class="bi bi-file-earmark-medical me-1"></i> View Scan
-                    </a>
+                  <td colspan="8" class="text-center py-4 text-muted">
+                    <span class="spinner-border spinner-border-sm me-2"></span>Loading diagnostic investigation queue...
                   </td>
                 </tr>
               </tbody>
@@ -303,6 +257,40 @@
     </div>
   </div>
 
+  <!-- MODAL: VIEW COMPLETED SCAN REPORT -->
+  <div class="modal fade" id="viewScanReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header border-bottom bg-light px-4 py-3">
+          <div>
+            <h5 class="modal-title fw-bold text-dark mb-0">
+              <i class="bi bi-file-earmark-medical-fill text-success me-2"></i> Verified Diagnostic Imaging &amp; Scan Report
+            </h5>
+            <div class="text-muted small">Department of Diagnostic Radiology &amp; Clinical Imaging</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" id="viewScanReportModalContent">
+          <!-- Dynamically populated report content -->
+        </div>
+        <div class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between align-items-center">
+          <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+            <i class="bi bi-shield-check me-1"></i> Authenticated &amp; Digitally Signed
+          </span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.print()">
+              <i class="bi bi-printer me-1"></i> Print Slip
+            </button>
+            <a href="../documents.html" class="btn btn-success btn-sm px-3">
+              <i class="bi bi-archive me-1"></i> Document Archives &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../../data/dummyData.js"></script>
@@ -314,12 +302,67 @@
   <script>
     let scanModalInstance = null;
     let newScanModalInstance = null;
+    let viewScanModalInstance = null;
+
+    const SEED_INVESTIGATION_QUEUE = [
+      {
+        orderId: 'INV-RAD-401',
+        patientName: 'Vikram Singh',
+        patientId: 'PAT-2026-005',
+        patientSub: 'PAT-2026-005 • Male / 55y',
+        procedure: '12-Lead Electrocardiogram (ECG)',
+        room: 'Cardio Suite 102',
+        doctor: 'Dr. Sarah Jenkins',
+        slot: 'Today, 10:15 AM',
+        priority: 'Routine',
+        status: 'Ready for Scan',
+        findings: 'Normal sinus rhythm with regular rate 72 bpm. PR interval 160ms, QRS duration 88ms. No significant ST-T segment elevation or pathological Q waves noted.',
+        filename: 'ECG_Strip_Vikram_Singh_Sep18.pdf',
+        verifiedAt: null,
+        verifiedBy: null
+      },
+      {
+        orderId: 'INV-RAD-402',
+        patientName: 'Sneha R',
+        patientId: 'H1268',
+        patientSub: 'H1268 • Female / 28y',
+        procedure: 'Chest Digital X-Ray (PA View)',
+        room: 'Radiology Bay 2',
+        doctor: 'Dr. Priya Sharma',
+        slot: 'Today, 10:45 AM',
+        priority: 'Routine',
+        status: 'In Imaging',
+        findings: 'Bilateral lung fields clear of focal infiltrates, effusion, or pneumothorax. Cardiothoracic ratio is within normal limits (<0.50). Costophrenic and cardiophrenic angles are sharp.',
+        filename: 'Chest_XRay_Sneha_R_Sep18.pdf',
+        verifiedAt: null,
+        verifiedBy: null
+      },
+      {
+        orderId: 'INV-RAD-403',
+        patientName: 'James Wilson',
+        patientId: 'PAT-2026-006',
+        patientSub: 'PAT-2026-006 • Male / 55y',
+        procedure: 'Ultrasound Whole Abdomen (USG)',
+        room: 'Ultrasound Suite 3',
+        doctor: 'Dr. Gregory Hayes',
+        slot: 'Today, 09:30 AM',
+        priority: 'Routine',
+        status: 'Verified',
+        findings: 'Normal acoustic architecture of liver, gallbladder, pancreas, and spleen. Both kidneys normal in size and echogenicity with preserved corticomedullary differentiation. No focal parenchymal lesions, hydronephrosis, or calculi identified.',
+        filename: 'USG_Abdomen_James_Wilson.pdf',
+        verifiedAt: 'Today, 09:55 AM',
+        verifiedBy: 'Dr. Gregory Hayes (MD, Radiologist)'
+      }
+    ];
 
     document.addEventListener('DOMContentLoaded', () => {
       HMSNav.init('investigation-portal', 'Investigation Suite', ['Home', 'Departments', 'Investigation'], 'investigation.view');
       scanModalInstance = new bootstrap.Modal(document.getElementById('scanModal'));
       newScanModalInstance = new bootstrap.Modal(document.getElementById('newScanOrderModal'));
+      viewScanModalInstance = new bootstrap.Modal(document.getElementById('viewScanReportModal'));
+      
       populateInvestigationPatientsDropdown();
+      loadInvestigationQueue();
     });
 
     async function populateInvestigationPatientsDropdown() {
@@ -330,7 +373,7 @@
         if (typeof HMSApi !== 'undefined' && HMSApi.patients) {
           patients = await HMSApi.patients.getAll();
         } else if (typeof HMSDataStore !== 'undefined') {
-          patients = HMSDataStore.getCollection('patients');
+          patients = HMSDataStore.getCollection('patients') || [];
         }
       } catch (err) {
         console.warn('Patient fetch notice:', err);
@@ -342,9 +385,22 @@
         if (raw) {
           const registered = JSON.parse(raw);
           registered.forEach(r => {
-            if (!patients.some(p => p.id === r.id || (p.email && p.email.toLowerCase() === (r.email || '').toLowerCase()))) {
+            if (!patients.some(p => p.id === r.id || (p.email && r.email && p.email.toLowerCase() === r.email.toLowerCase()))) {
               patients.unshift(r);
             }
+          });
+        }
+      } catch (e) {}
+
+      // Check active patient session
+      try {
+        const curUser = (typeof HMSAuth !== 'undefined') ? HMSAuth.getCurrentUser() : null;
+        if (curUser && curUser.name && !patients.some(p => p.name && p.name.toLowerCase() === curUser.name.toLowerCase())) {
+          patients.unshift({
+            id: curUser.id || curUser.patientId || 'H1278',
+            name: curUser.name,
+            gender: curUser.gender || 'General',
+            age: curUser.age || 26
           });
         }
       } catch (e) {}
@@ -362,11 +418,161 @@
       let optionsHtml = '';
       patients.forEach((p, idx) => {
         const ageGender = `${p.gender || 'General'} / ${p.age || 26}y`;
-        const val = `${p.name} • ${p.id} • ${ageGender}`;
-        optionsHtml += `<option value="${val}" ${idx === 0 ? 'selected' : ''}>${p.name} (${p.id} - ${ageGender})</option>`;
+        const val = `${p.name} • ${p.id || 'PAT-2026'} • ${ageGender}`;
+        optionsHtml += `<option value="${escapeHtml(val)}" ${idx === 0 ? 'selected' : ''}>${escapeHtml(p.name)} (${p.id || 'PAT'} - ${ageGender})</option>`;
       });
       optionsHtml += `<option value="Walk-in Patient • RAD-OPD • Outpatient">Walk-in Outpatient</option>`;
       pSelect.innerHTML = optionsHtml;
+    }
+
+    async function loadInvestigationQueue() {
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_INVESTIGATION_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (e) {}
+
+      if (!queue || queue.length === 0) {
+        queue = [...SEED_INVESTIGATION_QUEUE];
+      }
+
+      // Automatically sync newly registered patients from registry
+      try {
+        let allPatients = [];
+        if (typeof HMSApi !== 'undefined' && HMSApi.patients) {
+          allPatients = await HMSApi.patients.getAll();
+        } else if (typeof HMSDataStore !== 'undefined') {
+          allPatients = HMSDataStore.getCollection('patients') || [];
+        }
+
+        try {
+          const rawReg = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+          if (rawReg) {
+            const regList = JSON.parse(rawReg);
+            regList.forEach(rp => {
+              if (!allPatients.some(p => p.id === rp.id || (p.email && rp.email && p.email.toLowerCase() === rp.email.toLowerCase()))) {
+                allPatients.unshift(rp);
+              }
+            });
+          }
+        } catch (e) {}
+
+        // Check active patient session
+        try {
+          const curUser = (typeof HMSAuth !== 'undefined') ? HMSAuth.getCurrentUser() : null;
+          if (curUser && curUser.name && !allPatients.some(p => p.name && p.name.toLowerCase() === curUser.name.toLowerCase())) {
+            allPatients.unshift({
+              id: curUser.id || curUser.patientId || 'H1278',
+              name: curUser.name,
+              gender: curUser.gender || 'General',
+              age: curUser.age || 26
+            });
+          }
+        } catch (e) {}
+
+        allPatients.forEach(p => {
+          const exists = queue.some(q => 
+            (q.patientName && q.patientName.toLowerCase() === (p.name || '').toLowerCase()) || 
+            (q.patientSub && p.id && q.patientSub.includes(p.id))
+          );
+          if (!exists) {
+            const num = Math.abs(String(p.id || p.name).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 800 + 404;
+            queue.unshift({
+              orderId: `INV-RAD-${num}`,
+              patientName: p.name,
+              patientId: p.id || 'PAT-2026',
+              patientSub: `${p.id || 'PAT-2026'} • ${p.gender || 'General'} / ${p.age || 26}y`,
+              procedure: 'Chest Digital X-Ray (PA View)',
+              room: 'Radiology Bay 2',
+              doctor: 'Dr. Sarah Jenkins',
+              slot: 'Today, Immediate',
+              priority: 'Routine',
+              status: 'Ready for Scan',
+              findings: 'Bilateral lung fields clear. Cardiac silhouette is normal. Diaphragmatic contours are well preserved.',
+              filename: `Chest_XRay_${(p.name || 'Patient').replace(/\s+/g, '_')}.pdf`,
+              verifiedAt: null,
+              verifiedBy: null
+            });
+          }
+        });
+      } catch (err) {
+        console.warn('Investigation patient sync notice:', err);
+      }
+
+      try {
+        localStorage.setItem('HMS_INVESTIGATION_QUEUE_V1', JSON.stringify(queue));
+      } catch (e) {}
+
+      renderInvestigationQueue(queue);
+    }
+
+    function renderInvestigationQueue(queue) {
+      const tbody = document.getElementById('investigationQueueBody');
+      if (!tbody) return;
+
+      if (queue.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No diagnostic scans currently scheduled.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = queue.map(item => {
+        const isVerified = item.status === 'Verified';
+        const isStat = (item.priority && item.priority.includes('STAT')) || (item.status && item.status.includes('STAT'));
+        
+        let statusBadge = '';
+        if (isVerified) {
+          statusBadge = `<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check2-circle me-1"></i>Verified</span>`;
+        } else if (item.status === 'In Imaging') {
+          statusBadge = `<span class="badge bg-info-subtle text-info border border-info-subtle">In Imaging</span>`;
+        } else if (isStat) {
+          statusBadge = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Urgent / STAT</span>`;
+        } else {
+          statusBadge = `<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Ready for Scan</span>`;
+        }
+
+        let actionBtn = '';
+        if (isVerified) {
+          actionBtn = `
+            <button class="btn btn-sm btn-outline-success" onclick="viewScanReport('${escapeHtml(item.orderId)}')">
+              <i class="bi bi-file-earmark-medical me-1"></i> View Scan
+            </button>
+          `;
+        } else {
+          actionBtn = `
+            <button class="btn btn-sm btn-outline-info" onclick="recordScanModal('${escapeHtml(item.orderId)}')">
+              <i class="bi bi-camera-fill me-1"></i> Log Result
+            </button>
+          `;
+        }
+
+        return `
+          <tr>
+            <td class="ps-4 font-monospace fw-bold text-primary">${escapeHtml(item.orderId)}</td>
+            <td>
+              <div class="fw-bold text-dark">${escapeHtml(item.patientName)}</div>
+              <div class="text-muted small">${escapeHtml(item.patientSub || '')}</div>
+            </td>
+            <td>${escapeHtml(item.procedure)}</td>
+            <td><span class="badge bg-light text-dark border">${escapeHtml(item.room)}</span></td>
+            <td>${escapeHtml(item.doctor)}</td>
+            <td class="text-muted small">${escapeHtml(item.slot)}</td>
+            <td>${statusBadge}</td>
+            <td class="text-end pe-4">${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+
+      // Dynamically update KPI summary cards
+      const pastelCards = document.querySelectorAll('.stat-pastel-count');
+      if (pastelCards && pastelCards.length >= 3) {
+        const totalScans = queue.length;
+        const inQueue = queue.filter(q => q.status !== 'Verified').length;
+        const verified = queue.filter(q => q.status === 'Verified').length;
+
+        pastelCards[0].textContent = `${20 + totalScans} Scans`;
+        pastelCards[1].textContent = `${inQueue} Orders`;
+        pastelCards[2].textContent = `${15 + verified} Verified`;
+      }
     }
 
     function openNewScanOrderModal() {
@@ -376,6 +582,7 @@
 
     function autoSelectModality(proc) {
       const roomSelect = document.getElementById('scanRoomSelect');
+      if (!roomSelect) return;
       if (proc.includes('X-Ray')) roomSelect.value = 'Radiology Bay 2';
       else if (proc.includes('ECG')) roomSelect.value = 'Cardio Suite 102';
       else if (proc.includes('Ultrasound')) roomSelect.value = 'Ultrasound Suite 3';
@@ -388,6 +595,7 @@
       const patientRaw = document.getElementById('scanPatientSelect').value;
       const parts = patientRaw.split(' • ');
       const patientName = parts[0] || 'Patient';
+      const patientId = parts[1] || 'PAT-2026';
       const patientSub = parts.length > 1 ? parts.slice(1).join(' • ') : 'Outpatient';
       const procedure = document.getElementById('scanProcedureSelect').value;
       const room = document.getElementById('scanRoomSelect').value;
@@ -395,56 +603,70 @@
       const priority = document.getElementById('scanPrioritySelect').value;
       const slot = document.getElementById('scanSlotInput').value || 'Today, Immediate';
 
-      const randomNum = Math.floor(404 + Math.random() * 50);
+      const randomNum = Math.floor(405 + Math.random() * 90);
       const orderId = `INV-RAD-${randomNum}`;
 
       newScanModalInstance.hide();
 
-      const priorityBadge = priority.includes('STAT')
-        ? `<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Urgent / STAT</span>`
-        : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Ready for Scan</span>`;
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_INVESTIGATION_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (err) {}
+      if (!queue || queue.length === 0) queue = [...SEED_INVESTIGATION_QUEUE];
 
-      // Prepend row to table
-      const tbody = document.getElementById('investigationQueueBody');
-      const tr = document.createElement('tr');
-      tr.className = 'table-info-subtle';
-      tr.innerHTML = `
-        <td class="ps-4 font-monospace fw-bold text-primary">${orderId}</td>
-        <td>
-          <div class="fw-bold text-dark">${patientName}</div>
-          <div class="text-muted small">${patientSub}</div>
-        </td>
-        <td>${procedure}</td>
-        <td><span class="badge bg-light text-dark border">${room}</span></td>
-        <td>${doctor}</td>
-        <td class="text-muted small">${slot}</td>
-        <td>${priorityBadge}</td>
-        <td class="text-end pe-4">
-          <button class="btn btn-sm btn-outline-info" onclick="recordScanModal('${orderId}', '${patientName}', '${procedure}')">
-            <i class="bi bi-camera-fill me-1"></i> Log Result
-          </button>
-        </td>
-      `;
+      const newOrder = {
+        orderId: orderId,
+        patientName: patientName,
+        patientId: patientId,
+        patientSub: patientSub,
+        procedure: procedure,
+        room: room,
+        doctor: doctor,
+        slot: slot,
+        priority: priority,
+        status: priority.includes('STAT') ? 'Urgent / STAT' : 'Ready for Scan',
+        findings: 'Clinical radiological evaluation in progress. Diagnostic imaging series acquired.',
+        filename: `${procedure.replace(/[^a-zA-Z0-9]/g, '_')}_${patientName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+        verifiedAt: null,
+        verifiedBy: null
+      };
 
-      tbody.insertBefore(tr, tbody.firstChild);
+      queue.unshift(newOrder);
 
-      // Increment counters
-      const pastelCards = document.querySelectorAll('.stat-pastel-count');
-      if (pastelCards && pastelCards.length >= 2) {
-        let scans = parseInt(pastelCards[0].textContent) || 24;
-        pastelCards[0].textContent = scans + 1;
+      try {
+        localStorage.setItem('HMS_INVESTIGATION_QUEUE_V1', JSON.stringify(queue));
+      } catch (err) {}
 
-        let queue = parseInt(pastelCards[1].textContent) || 4;
-        pastelCards[1].textContent = queue + 1;
-      }
+      renderInvestigationQueue(queue);
 
       alert(`Scan order ${orderId} scheduled successfully for ${patientName} (${procedure}) in ${room}!`);
     }
 
-    function recordScanModal(orderId, patient, procedure) {
-      document.getElementById('scanOrderId').textContent = orderId;
-      document.getElementById('scanPatientName').textContent = patient;
-      document.getElementById('scanProcedure').textContent = procedure;
+    function recordScanModal(orderId) {
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_INVESTIGATION_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (e) {}
+
+      const item = queue.find(q => q.orderId === orderId);
+      if (!item) return;
+
+      document.getElementById('scanOrderId').textContent = item.orderId;
+      document.getElementById('scanPatientName').textContent = item.patientName;
+      document.getElementById('scanProcedure').textContent = item.procedure;
+
+      const findingsEl = document.getElementById('scanFindings');
+      if (findingsEl) {
+        findingsEl.value = item.findings || 'Normal study within expected biological parameters. No significant pathology or acute trauma identified.';
+      }
+
+      const filenameEl = document.getElementById('scanFilename');
+      if (filenameEl) {
+        filenameEl.value = item.filename || `${item.procedure.replace(/[^a-zA-Z0-9]/g, '_')}_${item.patientName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      }
+
       scanModalInstance.show();
     }
 
@@ -453,14 +675,37 @@
       const orderId = document.getElementById('scanOrderId').textContent.trim();
       const patientName = document.getElementById('scanPatientName').textContent.trim();
       const procedure = document.getElementById('scanProcedure').textContent.trim();
-      const findingsEl = document.getElementById('scanFindings') || document.getElementById('scanImpressions');
+      const findingsEl = document.getElementById('scanFindings');
       const impressions = findingsEl ? findingsEl.value : 'Normal radiological study findings.';
       const filenameEl = document.getElementById('scanFilename');
       const filename = filenameEl && filenameEl.value ? filenameEl.value : `${procedure}_${patientName}.pdf`;
 
       scanModalInstance.hide();
 
-      // 1. Persist into electronic documents
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_INVESTIGATION_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (err) {}
+      if (!queue || queue.length === 0) queue = [...SEED_INVESTIGATION_QUEUE];
+
+      const item = queue.find(q => q.orderId === orderId);
+      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', Today';
+      
+      if (item) {
+        item.status = 'Verified';
+        item.findings = impressions;
+        item.filename = filename;
+        item.verifiedAt = currentTime;
+        item.verifiedBy = 'Dr. Gregory Hayes, MD (Consultant Radiologist)';
+      }
+
+      // 1. Persist updated queue to localStorage
+      try {
+        localStorage.setItem('HMS_INVESTIGATION_QUEUE_V1', JSON.stringify(queue));
+      } catch (err) {}
+
+      // 2. Persist into electronic documents archive
       const docRecord = {
         id: `DOC-${Math.floor(1000 + Math.random() * 9000)}`,
         name: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
@@ -471,47 +716,120 @@
         fileSize: '3.8 MB',
         status: 'Verified',
         patientName: patientName,
-        details: { remarks: impressions }
+        patientId: (item && item.patientId) ? item.patientId : 'PAT-2026',
+        details: { 
+          remarks: impressions, 
+          procedure: procedure, 
+          orderId: orderId,
+          verifiedAt: currentTime
+        }
       };
 
-      if (window.HMSApi && window.HMSApi.documents) {
-        await window.HMSApi.documents.upload(docRecord);
-      } else if (window.HMSDataStore) {
-        window.HMSDataStore.addItem('documents', docRecord);
-      }
-
-      // 2. Update table row in real time
-      const rows = document.querySelectorAll('#investigationQueueBody tr');
-      rows.forEach(row => {
-        if (row.textContent.includes(orderId)) {
-          const statusCell = row.cells[6];
-          if (statusCell) {
-            statusCell.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle">Verified</span>`;
-          }
-          const actionCell = row.cells[7];
-          if (actionCell) {
-            actionCell.innerHTML = `
-              <a href="../documents.html" class="btn btn-sm btn-outline-success">
-                <i class="bi bi-file-earmark-medical me-1"></i> View Scan
-              </a>
-            `;
-          }
+      try {
+        if (window.HMSApi && window.HMSApi.documents) {
+          await window.HMSApi.documents.upload(docRecord);
+        } else if (window.HMSDataStore) {
+          window.HMSDataStore.addItem('documents', docRecord);
         }
-      });
-
-      // 3. Update KPI counts
-      const pastelCards = document.querySelectorAll('.stat-pastel-count');
-      if (pastelCards && pastelCards.length >= 3) {
-        let queue = parseInt(pastelCards[1].textContent) || 4;
-        if (queue > 0) pastelCards[1].textContent = queue - 1;
-
-        let verified = parseInt(pastelCards[2].textContent) || 20;
-        pastelCards[2].textContent = verified + 1;
+      } catch (err) {
+        console.warn('Doc upload notice:', err);
       }
 
-      if (confirm(`Diagnostic scan report for ${patientName} (${procedure}) has been verified and archived!\n\nWould you like to open Document Archives now to view it?`)) {
-        window.location.href = '../documents.html';
-      }
+      // 3. Re-render table: person details permanently remain visible with Verified badge
+      renderInvestigationQueue(queue);
+
+      // 4. Open the verified report modal for immediate review
+      viewScanReport(orderId);
+    }
+
+    function viewScanReport(orderId) {
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_INVESTIGATION_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (e) {}
+
+      const item = queue.find(q => q.orderId === orderId);
+      if (!item) return;
+
+      const container = document.getElementById('viewScanReportModalContent');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="border rounded-3 p-4 bg-white shadow-sm mb-3">
+          <!-- Hospital Header -->
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                <i class="bi bi-hospital fs-5"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold mb-0 text-dark">Metro General Hospital &amp; Research Center</h6>
+                <div class="text-muted small">Department of Diagnostic Imaging &amp; Interventional Radiology</div>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-bold fs-7">
+                <i class="bi bi-patch-check-fill me-1"></i> VERIFIED &amp; ARCHIVED
+              </span>
+              <div class="text-muted small mt-1 font-monospace">${escapeHtml(item.orderId)}</div>
+            </div>
+          </div>
+
+          <!-- Patient Information Grid -->
+          <div class="row g-3 p-3 bg-light rounded-3 mb-4 small">
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Patient Full Name</span>
+              <strong class="text-dark fs-6">${escapeHtml(item.patientName)}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Patient ID &amp; Demographics</span>
+              <strong class="text-dark">${escapeHtml(item.patientSub || item.patientId || 'Outpatient')}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Referring Physician</span>
+              <strong class="text-dark">${escapeHtml(item.doctor)}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Date &amp; Time Completed</span>
+              <strong class="text-dark">${escapeHtml(item.verifiedAt || item.slot || 'Today')}</strong>
+            </div>
+          </div>
+
+          <!-- Investigation / Study Details -->
+          <div class="mb-4">
+            <div class="text-secondary small fw-semibold text-uppercase tracking-wider mb-1">Clinical Procedure / Modality</div>
+            <h5 class="fw-bold text-primary mb-1">${escapeHtml(item.procedure)}</h5>
+            <div class="text-muted small">Acquisition Modality &amp; Suite: <strong>${escapeHtml(item.room)}</strong> • Priority: <strong>${escapeHtml(item.priority || 'Routine')}</strong></div>
+          </div>
+
+          <!-- Radiological Impression & Findings -->
+          <div class="mb-4">
+            <div class="text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Radiological Findings &amp; Clinical Impression</div>
+            <div class="p-3 border rounded-3 bg-light text-dark font-monospace small" style="white-space: pre-wrap; line-height: 1.6;">
+${escapeHtml(item.findings || 'Examination completed. No active pathology or acute radiographic abnormality detected. Findings correlated with clinical history.')}
+            </div>
+          </div>
+
+          <!-- Digital Sign-off -->
+          <div class="d-flex justify-content-between align-items-center border-top pt-3 small">
+            <div class="text-muted">
+              Attached Archival Series: <strong class="text-dark font-monospace">${escapeHtml(item.filename || 'DICOM_Series.pdf')}</strong>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold text-dark">${escapeHtml(item.verifiedBy || 'Dr. Gregory Hayes, MD')}</div>
+              <div class="text-muted">Consultant Radiologist &amp; Medical Officer</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      viewScanModalInstance.show();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
     }
   </script>
 </body>

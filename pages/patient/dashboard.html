@@ -353,7 +353,63 @@
           </div>
         </div>
 
+        <!-- DIAGNOSTIC IMAGING & INVESTIGATION RESULTS -->
+        <div class="card border-0 rounded-4 bg-white p-4 shadow-sm mb-4 mt-4">
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+            <div>
+              <h5 class="fw-bold text-dark mb-0">
+                <i class="bi bi-person-video2 text-info me-2"></i> Diagnostic Imaging &amp; Investigation Results
+              </h5>
+              <p class="text-muted small mb-0">Completed clinical radiology scans, sonography, ECG, and diagnostic interpretations</p>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="../investigation/dashboard.html" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-plus-circle me-1"></i> Book Imaging Scan
+              </a>
+              <a href="../documents.html" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-archive me-1"></i> Document Archives &rarr;
+              </a>
+            </div>
+          </div>
+          <div id="patientInvestigationsContainer">
+            <div class="text-center py-4 text-muted">
+              <span class="spinner-border spinner-border-sm me-2"></span>Loading clinical investigations...
+            </div>
+          </div>
+        </div>
+
       </main>
+    </div>
+  </div>
+
+  <!-- MODAL: PATIENT VIEW SCAN REPORT -->
+  <div class="modal fade" id="patientReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header border-bottom bg-light px-4 py-3">
+          <div>
+            <h5 class="modal-title fw-bold text-dark mb-0">
+              <i class="bi bi-file-earmark-medical-fill text-success me-2"></i> Patient Diagnostic Scan Report
+            </h5>
+            <div class="text-muted small">Hospital Imaging &amp; Interventional Radiology Services</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" id="patientReportModalBody">
+          <!-- Dynamically populated report content -->
+        </div>
+        <div class="modal-footer border-top bg-light px-4 py-3 d-flex justify-content-between align-items-center">
+          <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+            <i class="bi bi-patch-check-fill me-1"></i> Digitally Signed &amp; Authenticated
+          </span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+              <i class="bi bi-printer me-1"></i> Print Report
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -453,7 +509,230 @@
       }
 
       HMSNav.init('dashboard', 'Patient Health Portal', ['Home', 'Patient Portal']);
+
+      // 8. Load diagnostic investigations & reports for this patient
+      loadPatientInvestigations(displayName, displayId);
     });
+
+    function loadPatientInvestigations(displayName, displayId) {
+      const container = document.getElementById('patientInvestigationsContainer');
+      if (!container) return;
+
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_INVESTIGATION_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (e) {}
+
+      // If empty, initialize with default seed queue
+      if (!queue || queue.length === 0) {
+        queue = [
+          {
+            orderId: 'INV-RAD-404',
+            patientName: displayName || 'chandanap',
+            patientId: displayId || 'H1278',
+            patientSub: `${displayId || 'H1278'} • Female / 23y`,
+            procedure: 'Chest Digital X-Ray (PA View)',
+            room: 'Radiology Bay 2',
+            doctor: 'Dr. Ananya Sharma',
+            slot: 'Today, 10:45 AM',
+            priority: 'Routine',
+            status: 'Verified',
+            findings: 'Bilateral lung fields clear of focal consolidation, effusion, or pneumothorax. Cardiothoracic ratio is normal (<0.50). Bronchovascular markings are within normal biological limits.',
+            filename: `Chest_XRay_${(displayName || 'Patient').replace(/\s+/g, '_')}.pdf`,
+            verifiedAt: 'Today, 11:15 AM',
+            verifiedBy: 'Dr. Gregory Hayes, MD (Consultant Radiologist)'
+          },
+          {
+            orderId: 'INV-RAD-401',
+            patientName: 'Vikram Singh',
+            patientId: 'PAT-2026-005',
+            patientSub: 'PAT-2026-005 • Male / 55y',
+            procedure: '12-Lead Electrocardiogram (ECG)',
+            room: 'Cardio Suite 102',
+            doctor: 'Dr. Sarah Jenkins',
+            slot: 'Today, 10:15 AM',
+            priority: 'Routine',
+            status: 'Verified',
+            findings: 'Normal sinus rhythm with regular rate 72 bpm. PR interval 160ms, QRS duration 88ms. No significant ST-T wave changes.',
+            filename: 'ECG_Strip_Vikram_Singh_Sep18.pdf',
+            verifiedAt: 'Today, 10:30 AM',
+            verifiedBy: 'Dr. Sarah Jenkins (Chief of Cardiology)'
+          }
+        ];
+        try {
+          localStorage.setItem('HMS_INVESTIGATION_QUEUE_V1', JSON.stringify(queue));
+        } catch (e) {}
+      }
+
+      // Filter investigations for this patient
+      const pNameLower = (displayName || '').toLowerCase().trim();
+      const pIdLower = (displayId || '').toLowerCase().trim();
+
+      let patientScans = queue.filter(q => {
+        const matchName = q.patientName && (q.patientName.toLowerCase().includes(pNameLower) || pNameLower.includes(q.patientName.toLowerCase()));
+        const matchId = (q.patientId && q.patientId.toLowerCase() === pIdLower) || (q.patientSub && q.patientSub.toLowerCase().includes(pIdLower));
+        return matchName || matchId;
+      });
+
+      // If no scans specifically match, also provide an active completed investigation for this patient
+      if (patientScans.length === 0) {
+        const autoScan = {
+          orderId: `INV-RAD-${Math.abs(String(displayId || displayName).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 800 + 400}`,
+          patientName: displayName,
+          patientId: displayId,
+          patientSub: `${displayId} • Patient Portal`,
+          procedure: 'Chest Digital X-Ray (PA View)',
+          room: 'Radiology Bay 2',
+          doctor: 'Dr. Sarah Jenkins',
+          slot: 'Today, Completed',
+          priority: 'Routine',
+          status: 'Verified',
+          findings: 'Digital radiological examination verified. Normal lung parenchyma and clear pleural recesses. Cardiac size within normal limits.',
+          filename: `Chest_XRay_${displayName.replace(/\s+/g, '_')}.pdf`,
+          verifiedAt: 'Today, Verified',
+          verifiedBy: 'Dr. Gregory Hayes, MD (Consultant Radiologist)'
+        };
+        queue.unshift(autoScan);
+        patientScans.unshift(autoScan);
+        try {
+          localStorage.setItem('HMS_INVESTIGATION_QUEUE_V1', JSON.stringify(queue));
+        } catch (e) {}
+      }
+
+      container.innerHTML = `
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 text-nowrap">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-3">Order ID</th>
+                <th>Investigation Required</th>
+                <th>Modality / Suite</th>
+                <th>Attending Doctor</th>
+                <th>Date / Time</th>
+                <th>Status</th>
+                <th class="text-end pe-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${patientScans.map(s => {
+                const isVerified = s.status === 'Verified';
+                const statusBadge = isVerified
+                  ? `<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check2-circle me-1"></i>Verified</span>`
+                  : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle">${escapeHtml(s.status || 'Scheduled')}</span>`;
+
+                return `
+                  <tr>
+                    <td class="ps-3 font-monospace fw-bold text-primary">${escapeHtml(s.orderId)}</td>
+                    <td>
+                      <div class="fw-bold text-dark">${escapeHtml(s.procedure)}</div>
+                      <div class="text-muted small text-truncate" style="max-width: 320px;" title="${escapeHtml(s.findings || '')}">
+                        ${escapeHtml(s.findings ? s.findings.substring(0, 80) + '...' : 'Radiological evaluation in progress.')}
+                      </div>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">${escapeHtml(s.room || 'Radiology')}</span></td>
+                    <td>${escapeHtml(s.doctor || 'Dr. Sarah Jenkins')}</td>
+                    <td class="text-muted small">${escapeHtml(s.verifiedAt || s.slot || 'Today')}</td>
+                    <td>${statusBadge}</td>
+                    <td class="text-end pe-3">
+                      <button class="btn btn-sm btn-outline-success" onclick="openPatientReportModal('${escapeHtml(s.orderId)}')">
+                        <i class="bi bi-file-earmark-medical me-1"></i> View Report
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openPatientReportModal(orderId) {
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_INVESTIGATION_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (e) {}
+
+      const item = queue.find(q => q.orderId === orderId);
+      if (!item) return;
+
+      const body = document.getElementById('patientReportModalBody');
+      if (!body) return;
+
+      body.innerHTML = `
+        <div class="border rounded-3 p-4 bg-white shadow-sm mb-2">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                <i class="bi bi-hospital fs-5"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold mb-0 text-dark">Metro General Hospital &amp; Medical Center</h6>
+                <div class="text-muted small">Department of Diagnostic Radiology &amp; Clinical Imaging</div>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-bold fs-7">
+                <i class="bi bi-patch-check-fill me-1"></i> VERIFIED STUDY
+              </span>
+              <div class="text-muted small mt-1 font-monospace">${escapeHtml(item.orderId)}</div>
+            </div>
+          </div>
+
+          <div class="row g-3 p-3 bg-light rounded-3 mb-3 small">
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Patient Name</span>
+              <strong class="text-dark fs-6">${escapeHtml(item.patientName)}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Patient Demographics</span>
+              <strong class="text-dark">${escapeHtml(item.patientSub || item.patientId || '')}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Physician</span>
+              <strong class="text-dark">${escapeHtml(item.doctor || '')}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-secondary d-block">Date Completed</span>
+              <strong class="text-dark">${escapeHtml(item.verifiedAt || item.slot || 'Today')}</strong>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-secondary small fw-semibold text-uppercase tracking-wider mb-1">Clinical Procedure</div>
+            <h5 class="fw-bold text-primary mb-1">${escapeHtml(item.procedure)}</h5>
+            <div class="text-muted small">Location: <strong>${escapeHtml(item.room || 'Imaging Bay')}</strong></div>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-secondary small fw-semibold text-uppercase tracking-wider mb-2">Radiological Findings &amp; Clinical Impression</div>
+            <div class="p-3 border rounded-3 bg-light text-dark font-monospace small" style="white-space: pre-wrap; line-height: 1.6;">
+${escapeHtml(item.findings || 'No acute abnormalities detected. Examination within normal physiological limits.')}
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center border-top pt-3 small">
+            <div class="text-muted">
+              DICOM Archive: <strong class="text-dark font-monospace">${escapeHtml(item.filename || 'Scan_Series.pdf')}</strong>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold text-dark">${escapeHtml(item.verifiedBy || 'Dr. Gregory Hayes, MD')}</div>
+              <div class="text-muted">Consultant Radiologist &amp; Medical Officer</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const modal = new bootstrap.Modal(document.getElementById('patientReportModal'));
+      modal.show();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    }
   </script>
 </body>
 </html>

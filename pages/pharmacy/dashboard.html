@@ -87,67 +87,8 @@
               </thead>
               <tbody id="pharmacyQueueBody">
                 <tr>
-                  <td class="ps-4 font-monospace fw-bold text-primary">RX-2026-445</td>
-                  <td>
-                    <div class="fw-bold text-dark">chandanap</div>
-                    <div class="text-muted small">H1278 • Female / 23y</div>
-                  </td>
-                  <td>Dr. Ananya Sharma</td>
-                  <td class="text-truncate" style="max-width: 250px;">Amoxicillin 500mg (1-0-1), Paracetamol 650mg (SOS)</td>
-                  <td class="text-muted small">Just now</td>
-                  <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle">Ready to Dispense</span></td>
-                  <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-success" onclick="dispenseRx('RX-2026-445', 'chandanap', 155.00)">
-                      <i class="bi bi-box-arrow-up-right me-1"></i> Dispense &amp; Bill
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-4 font-monospace fw-bold text-primary">RX-2026-441</td>
-                  <td>
-                    <div class="fw-bold text-dark">Sneha R</div>
-                    <div class="text-muted small">H1268 • Female / 28y</div>
-                  </td>
-                  <td>Dr. Priya Sharma</td>
-                  <td class="text-truncate" style="max-width: 250px;">Paracetamol 650mg, Vitamin D3 60k IU, Calcium Carbonate</td>
-                  <td class="text-muted small">10 mins ago</td>
-                  <td><span class="badge bg-warning-subtle text-warning border border-warning-subtle">Ready to Dispense</span></td>
-                  <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-success" onclick="dispenseRx('RX-2026-441', 'Sneha R', 225.00)">
-                      <i class="bi bi-box-arrow-up-right me-1"></i> Dispense &amp; Bill
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-4 font-monospace fw-bold text-primary">RX-2026-442</td>
-                  <td>
-                    <div class="fw-bold text-dark">Aarav Patel</div>
-                    <div class="text-muted small">Child • Male / 8y</div>
-                  </td>
-                  <td>Dr. Sneha Iyer</td>
-                  <td class="text-truncate" style="max-width: 250px;">Amoxicillin Oral Suspension 125mg, Multivitamin Drops</td>
-                  <td class="text-muted small">25 mins ago</td>
-                  <td><span class="badge bg-info-subtle text-info border border-info-subtle">Order Checked</span></td>
-                  <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-success" onclick="dispenseRx('RX-2026-442', 'Aarav Patel', 180.00)">
-                      <i class="bi bi-box-arrow-up-right me-1"></i> Dispense &amp; Bill
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="ps-4 font-monospace fw-bold text-primary">RX-2026-440</td>
-                  <td>
-                    <div class="fw-bold text-dark">Robert Harrison</div>
-                    <div class="text-muted small">PAT-2026-001 • Male / 48y</div>
-                  </td>
-                  <td>Dr. Sarah Jenkins</td>
-                  <td class="text-truncate" style="max-width: 250px;">Atorvastatin 20mg, Amlodipine 5mg</td>
-                  <td class="text-muted small">1 hour ago</td>
-                  <td><span class="badge bg-success-subtle text-success border border-success-subtle">Dispensed &amp; Paid</span></td>
-                  <td class="text-end pe-4">
-                    <a href="../billing.html" class="btn btn-sm btn-outline-secondary">
-                      <i class="bi bi-receipt me-1"></i> View Receipt
-                    </a>
+                  <td colspan="7" class="text-center py-4 text-muted">
+                    <span class="spinner-border spinner-border-sm me-2"></span>Loading prescriptions queue...
                   </td>
                 </tr>
               </tbody>
@@ -310,11 +251,178 @@
   <script>
     let posModalInstance = null;
 
+    const SEED_PHARMACY_QUEUE = [
+      {
+        rxNo: 'RX-2026-445',
+        patientName: 'chandanap',
+        patientSub: 'H1278 • Female / 23y',
+        doctor: 'Dr. Ananya Sharma',
+        medications: 'Amoxicillin 500mg (1-0-1), Paracetamol 650mg (SOS)',
+        time: 'Just now',
+        status: 'Ready to Dispense',
+        amount: 155.00
+      },
+      {
+        rxNo: 'RX-2026-441',
+        patientName: 'Sneha R',
+        patientSub: 'H1268 • Female / 28y',
+        doctor: 'Dr. Priya Sharma',
+        medications: 'Paracetamol 650mg, Vitamin D3 60k IU, Calcium Carbonate',
+        time: '10 mins ago',
+        status: 'Ready to Dispense',
+        amount: 225.00
+      },
+      {
+        rxNo: 'RX-2026-442',
+        patientName: 'Aarav Patel',
+        patientSub: 'Child • Male / 8y',
+        doctor: 'Dr. Sneha Iyer',
+        medications: 'Amoxicillin Oral Suspension 125mg, Multivitamin Drops',
+        time: '25 mins ago',
+        status: 'Order Checked',
+        amount: 180.00
+      },
+      {
+        rxNo: 'RX-2026-440',
+        patientName: 'Robert Harrison',
+        patientSub: 'PAT-2026-001 • Male / 48y',
+        doctor: 'Dr. Sarah Jenkins',
+        medications: 'Atorvastatin 20mg, Amlodipine 5mg',
+        time: '1 hour ago',
+        status: 'Dispensed & Paid',
+        amount: 120.00
+      }
+    ];
+
     document.addEventListener('DOMContentLoaded', () => {
       HMSNav.init('pharmacy-portal', 'Pharmacy Portal', ['Home', 'Departments', 'Pharmacy'], 'pharmacy.view');
       posModalInstance = new bootstrap.Modal(document.getElementById('posModal'));
       calculatePosTotal();
+      loadPharmacyQueue();
     });
+
+    async function loadPharmacyQueue() {
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_PHARMACY_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (e) {}
+
+      if (!queue || queue.length === 0) {
+        queue = [...SEED_PHARMACY_QUEUE];
+      }
+
+      // Automatically sync newly registered patients from registry
+      try {
+        let allPatients = [];
+        if (typeof HMSApi !== 'undefined' && HMSApi.patients) {
+          allPatients = await HMSApi.patients.getAll();
+        } else if (typeof HMSDataStore !== 'undefined') {
+          allPatients = HMSDataStore.getCollection('patients') || [];
+        }
+
+        // Also check raw localStorage registered list
+        try {
+          const rawReg = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+          if (rawReg) {
+            const regList = JSON.parse(rawReg);
+            regList.forEach(rp => {
+              if (!allPatients.some(p => p.id === rp.id || (p.email && rp.email && p.email.toLowerCase() === rp.email.toLowerCase()))) {
+                allPatients.unshift(rp);
+              }
+            });
+          }
+        } catch (e) {}
+
+        // Also check current session if patient
+        try {
+          const curUser = (typeof HMSAuth !== 'undefined') ? HMSAuth.getCurrentUser() : null;
+          if (curUser && curUser.name && !allPatients.some(p => p.name && p.name.toLowerCase() === curUser.name.toLowerCase())) {
+            allPatients.unshift({
+              id: curUser.id || curUser.patientId || 'H1278',
+              name: curUser.name,
+              gender: curUser.gender || 'General',
+              age: curUser.age || 26
+            });
+          }
+        } catch (e) {}
+
+        allPatients.forEach(p => {
+          const exists = queue.some(q => 
+            (q.patientName && q.patientName.toLowerCase() === (p.name || '').toLowerCase()) || 
+            (q.patientSub && p.id && q.patientSub.includes(p.id))
+          );
+          if (!exists) {
+            const num = Math.abs(String(p.id || p.name).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 800 + 100;
+            queue.unshift({
+              rxNo: `RX-2026-${num}`,
+              patientName: p.name,
+              patientSub: `${p.id || 'PAT-2026'} • ${p.gender || 'General'} / ${p.age || 26}y`,
+              doctor: 'Dr. Sarah Jenkins',
+              medications: 'Amoxicillin 500mg (1-0-1), Pantoprazole 40mg, Paracetamol 650mg',
+              time: 'Just now',
+              status: 'Ready to Dispense',
+              amount: 195.00
+            });
+          }
+        });
+      } catch (err) {
+        console.warn('Pharmacy queue patient sync notice:', err);
+      }
+
+      try {
+        localStorage.setItem('HMS_PHARMACY_QUEUE_V1', JSON.stringify(queue));
+      } catch (e) {}
+
+      renderPharmacyQueue(queue);
+    }
+
+    function renderPharmacyQueue(queue) {
+      const tbody = document.getElementById('pharmacyQueueBody');
+      if (!tbody) return;
+
+      if (queue.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No prescriptions awaiting dispensing.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = queue.map(rx => {
+        const isDispensed = rx.status === 'Dispensed & Paid';
+        const statusBadge = isDispensed
+          ? `<span class="badge bg-success-subtle text-success border border-success-subtle">Dispensed &amp; Paid</span>`
+          : (rx.status === 'Order Checked'
+              ? `<span class="badge bg-info-subtle text-info border border-info-subtle">Order Checked</span>`
+              : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Ready to Dispense</span>`);
+
+        const actionBtn = isDispensed
+          ? `<a href="../billing.html" class="btn btn-sm btn-outline-secondary">
+               <i class="bi bi-receipt me-1"></i> View Receipt
+             </a>`
+          : `<button class="btn btn-sm btn-success" onclick="dispenseRx('${rx.rxNo}', '${escapeHtml(rx.patientName)}', ${rx.amount})">
+               <i class="bi bi-box-arrow-up-right me-1"></i> Dispense &amp; Bill
+             </button>`;
+
+        return `
+          <tr>
+            <td class="ps-4 font-monospace fw-bold text-primary">${escapeHtml(rx.rxNo)}</td>
+            <td>
+              <div class="fw-bold text-dark">${escapeHtml(rx.patientName)}</div>
+              <div class="text-muted small">${escapeHtml(rx.patientSub)}</div>
+            </td>
+            <td>${escapeHtml(rx.doctor)}</td>
+            <td class="text-truncate" style="max-width: 250px;" title="${escapeHtml(rx.medications)}">${escapeHtml(rx.medications)}</td>
+            <td class="text-muted small">${escapeHtml(rx.time)}</td>
+            <td>${statusBadge}</td>
+            <td class="text-end pe-4">${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    }
 
     function openPosModal() {
       posModalInstance.show();
@@ -329,7 +437,7 @@
 
     function handlePosSale(e) {
       e.preventDefault();
-      const customer = document.getElementById('posCustomerName').value || 'Walk-in';
+      const customer = document.getElementById('posCustomerName').value || 'Walk-in Customer';
       const medSelect = document.getElementById('posMedicineSelect');
       const medName = medSelect.options[medSelect.selectedIndex].getAttribute('data-name');
       const qty = document.getElementById('posQty').value;
@@ -338,6 +446,31 @@
       const billNo = `PHARM-${Math.floor(1000 + Math.random() * 9000)}`;
 
       posModalInstance.hide();
+
+      // Add to pharmacy queue as Dispensed & Paid so customer details display in table
+      let queue = [];
+      try {
+        const raw = localStorage.getItem('HMS_PHARMACY_QUEUE_V1');
+        if (raw) queue = JSON.parse(raw);
+      } catch (e) {}
+      if (!queue || queue.length === 0) queue = [...SEED_PHARMACY_QUEUE];
+
+      queue.unshift({
+        rxNo: billNo,
+        patientName: customer,
+        patientSub: 'Walk-in Customer • Retail POS Sale',
+        doctor: 'Counter Sale / OTC',
+        medications: `${medName} (Qty: ${qty})`,
+        time: 'Just now',
+        status: 'Dispensed & Paid',
+        amount: parseFloat(total)
+      });
+
+      try {
+        localStorage.setItem('HMS_PHARMACY_QUEUE_V1', JSON.stringify(queue));
+      } catch (e) {}
+
+      renderPharmacyQueue(queue);
 
       // Update Sales Today counter
       const pastelCards = document.querySelectorAll('.stat-pastel-count');
@@ -350,27 +483,24 @@
     }
 
     function dispenseRx(rxNo, patient, amount) {
-      if (confirm(`Dispense prescribed medications for ${patient}?\nTotal Billing Amount: ₹${amount.toFixed(2)}`)) {
-        // 1. Update row in table
-        const rows = document.querySelectorAll('#pharmacyQueueBody tr');
-        rows.forEach(row => {
-          if (row.textContent.includes(rxNo)) {
-            const statusCell = row.cells[5];
-            if (statusCell) {
-              statusCell.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle">Dispensed & Paid</span>`;
-            }
-            const actionCell = row.cells[6];
-            if (actionCell) {
-              actionCell.innerHTML = `
-                <a href="../billing.html" class="btn btn-sm btn-outline-secondary">
-                  <i class="bi bi-receipt me-1"></i> View Receipt
-                </a>
-              `;
-            }
-          }
-        });
+      if (confirm(`Dispense prescribed medications for ${patient}?\nTotal Billing Amount: ₹${Number(amount).toFixed(2)}`)) {
+        let queue = [];
+        try {
+          const raw = localStorage.getItem('HMS_PHARMACY_QUEUE_V1');
+          if (raw) queue = JSON.parse(raw);
+        } catch (e) {}
 
-        // 2. Increment counters
+        const item = queue.find(q => q.rxNo === rxNo);
+        if (item) {
+          item.status = 'Dispensed & Paid';
+          try {
+            localStorage.setItem('HMS_PHARMACY_QUEUE_V1', JSON.stringify(queue));
+          } catch (e) {}
+        }
+
+        renderPharmacyQueue(queue);
+
+        // Increment counters
         const pastelCards = document.querySelectorAll('.stat-pastel-count');
         if (pastelCards && pastelCards.length >= 2) {
           let currentSales = parseFloat(pastelCards[0].textContent.replace(/[^0-9.]/g, '')) || 18420;
