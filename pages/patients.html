@@ -404,6 +404,36 @@
 
       await HMSApi.patients.create(newPatient);
 
+      // Persist in HMS_REGISTERED_PATIENTS_LIST and HMS_CREATED_USERS_STORE for seamless authentication
+      try {
+        const rawReg = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+        const regList = rawReg ? JSON.parse(rawReg) : [];
+        const exIdx = regList.findIndex(p => p.id === newPatient.id || (p.email && newPatient.email && p.email.toLowerCase() === newPatient.email.toLowerCase()));
+        if (exIdx !== -1) regList[exIdx] = { ...regList[exIdx], ...newPatient };
+        else regList.unshift(newPatient);
+        localStorage.setItem('HMS_REGISTERED_PATIENTS_LIST', JSON.stringify(regList));
+
+        if (newPatient.email) {
+          const rawCreated = localStorage.getItem('HMS_CREATED_USERS_STORE');
+          const createdList = rawCreated ? JSON.parse(rawCreated) : [];
+          const uRecord = {
+            id: newPatient.id,
+            name: newPatient.name,
+            email: newPatient.email,
+            phone: newPatient.phone,
+            role: 'Patient',
+            role_slug: 'patient',
+            password: 'password123',
+            status: 'active',
+            created_at: new Date().toISOString()
+          };
+          const uIdx = createdList.findIndex(u => u.email && u.email.toLowerCase() === newPatient.email.toLowerCase());
+          if (uIdx !== -1) createdList[uIdx] = { ...createdList[uIdx], ...uRecord };
+          else createdList.unshift(uRecord);
+          localStorage.setItem('HMS_CREATED_USERS_STORE', JSON.stringify(createdList));
+        }
+      } catch (e) {}
+
       // Auto-provision Patient Portal Login & Dispatch Email Credentials if email provided
       if (newPatient.email && newPatient.email.includes('@')) {
         try {

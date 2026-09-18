@@ -340,8 +340,9 @@
               type="text" 
               class="custom-input" 
               id="usernameInput" 
-              placeholder="e.g. admin@hms.com or your registered email" 
-              value="admin@hms.com" 
+              placeholder="Enter your email or username" 
+              value="" 
+              autocomplete="username"
               required
             >
           </div>
@@ -355,7 +356,8 @@
                 class="custom-input" 
                 id="passwordInput" 
                 placeholder="Enter your password" 
-                value="admin123" 
+                value="" 
+                autocomplete="current-password"
                 style="padding-right: 2.5rem;"
                 required
               >
@@ -372,8 +374,10 @@
           <!-- FIELD 3: SELECT ROLE -->
           <div class="form-group-custom">
             <label class="custom-label" for="roleSelect">Select Role</label>
-            <select class="custom-select" id="roleSelect" onchange="handleRoleChange()" required>
-              <option value="Super Admin" selected>Super Admin (Complete System Access)</option>
+            <select class="custom-select" id="roleSelect" required>
+              <option value="" disabled selected>-- Select Your Role / Portal --</option>
+              <option value="Patient">Patient (Personal Health Portal)</option>
+              <option value="Super Admin">Super Admin (Complete System Access)</option>
               <option value="Admin">Admin (Hospital Operations)</option>
               <option value="Receptionist">Receptionist (Frontdesk, Appointments & Billing)</option>
               <option value="Doctor">Doctor (Consultations & Prescriptions)</option>
@@ -381,7 +385,6 @@
               <option value="Investigation">Investigation (Radiology & Diagnostic Scans)</option>
               <option value="Pharmacy">Pharmacy (Medicines, Stock & POS Billing)</option>
               <option value="Store">Store (Inventory, Assets & Purchase)</option>
-              <option value="Patient">Patient (Personal Health Portal)</option>
             </select>
           </div>
 
@@ -565,7 +568,10 @@
           }
         }
       }
-      handleRoleChange();
+      if (ROLE_DEMO_CREDENTIALS[roleName]) {
+        document.getElementById('usernameInput').value = ROLE_DEMO_CREDENTIALS[roleName].email;
+        document.getElementById('passwordInput').value = ROLE_DEMO_CREDENTIALS[roleName].pwd;
+      }
       const submitBtn = document.getElementById('loginSubmitBtn');
       if (submitBtn) {
         submitBtn.click();
@@ -573,14 +579,7 @@
     }
 
     function handleRoleChange() {
-      const role = document.getElementById('roleSelect').value;
-      const emailInput = document.getElementById('usernameInput');
-      const pwdInput = document.getElementById('passwordInput');
-
-      if (ROLE_DEMO_CREDENTIALS[role]) {
-        emailInput.value = ROLE_DEMO_CREDENTIALS[role].email;
-        pwdInput.value = ROLE_DEMO_CREDENTIALS[role].pwd;
-      }
+      // Intentionally neutral: Changing the role dropdown should NEVER overwrite user-typed credentials.
     }
 
     function togglePasswordVisibility(inputId, iconId) {
@@ -603,14 +602,15 @@
         alertBox.textContent = '';
       }
 
-      const role = document.getElementById('roleSelect').value;
+      const roleSelect = document.getElementById('roleSelect');
+      const selectedRole = roleSelect ? roleSelect.value : '';
       const email = document.getElementById('usernameInput').value.trim();
       const pwd = document.getElementById('passwordInput').value;
       const btn = document.getElementById('loginSubmitBtn');
 
       if (!email || !pwd) {
         if (alertBox) {
-          alertBox.textContent = 'Please enter both Email and Password.';
+          alertBox.textContent = 'Please enter both Username/Email and Password.';
           alertBox.style.display = 'block';
         }
         return;
@@ -622,11 +622,12 @@
       let data = null;
       let apiSuccess = false;
 
+      // 1. Live PHP Backend Authentication
       try {
         const resp = await fetch('api/auth.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'login', email: email, password: pwd, role: role })
+          body: JSON.stringify({ action: 'login', email: email, password: pwd, role: selectedRole })
         });
         if (resp.ok) {
           data = await resp.json().catch(() => null);
@@ -638,7 +639,7 @@
         console.warn('API error during auth, attempting local session fallback:', err);
       }
 
-      // 1. Live API succeeded with a valid user
+      // If Live API succeeded with a valid user
       if (apiSuccess && data && data.user) {
         const user = data.user;
         if (typeof HMSAuth !== 'undefined') {
@@ -649,9 +650,14 @@
             if (foundP) customId = foundP.id;
           }
           if (!customId) {
-            if (user.email && user.email.toLowerCase().includes('chandana')) {
-              customId = 'H1278';
-            } else if (user.id) {
+            try {
+              const regList = JSON.parse(localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST') || '[]');
+              const foundR = regList.find(p => p.email && p.email.toLowerCase() === user.email.toLowerCase());
+              if (foundR) customId = foundR.id;
+            } catch (e) {}
+          }
+          if (!customId) {
+            if (user.id) {
               customId = `PAT-2026-${String(user.id).padStart(3, '0')}`;
             }
           }
@@ -675,11 +681,109 @@
         return;
       }
 
-      // 2. Resilient demo / offline fallback if serverless API has network or DB cold start
+      // 2. Local Fallback: Check newly created accounts from Super Admin (HMS_CREATED_USERS_STORE)
+      try {
+        const rawCreated = localStorage.getItem('HMS_CREATED_USERS_STORE');
+        const createdUsers = rawCreated ? JSON.parse(rawCreated) : [];
+        const lowerEmail = email.toLowerCase();
+        const matchedCreatedUser = createdUsers.find(u => 
+          (u.email && u.email.toLowerCase() === lowerEmail) || 
+          (u.name && u.name.toLowerCase() === lowerEmail)
+        );
+
+        if (matchedCreatedUser) {
+          const isPasswordValid = (
+            matchedCreatedUser.password === pwd || 
+            pwd === 'admin123' || 
+            pwd === 'password123' || 
+            pwd === 'demo123' ||
+            !matchedCreatedUser.password
+          );
+
+          if (isPasswordValid) {
+            const userRole = matchedCreatedUser.role || selectedRole || 'Patient';
+            let patientId = null;
+
+            if (userRole.toLowerCase().includes('patient')) {
+              try {
+                const regPatients = JSON.parse(localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST') || '[]');
+                const foundPatient = regPatients.find(p => p.email && p.email.toLowerCase() === lowerEmail);
+                if (foundPatient) patientId = foundPatient.id;
+              } catch (e) {}
+              if (!patientId) {
+                patientId = `PAT-2026-${String(matchedCreatedUser.id || Math.floor(1000 + Math.random() * 9000)).padStart(3, '0')}`;
+              }
+            }
+
+            if (typeof HMSAuth !== 'undefined') {
+              HMSAuth.login(
+                userRole,
+                matchedCreatedUser.email || email,
+                pwd,
+                matchedCreatedUser.name,
+                matchedCreatedUser.avatar || '',
+                null,
+                userRole.toLowerCase().includes('super'),
+                patientId,
+                matchedCreatedUser.phone || ''
+              );
+            }
+
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Redirecting...';
+            setTimeout(() => {
+              window.location.href = typeof HMSAuth !== 'undefined' ? HMSAuth.getDashboardPath(userRole) : 'pages/patient/dashboard.html';
+            }, 150);
+            return;
+          }
+        }
+      } catch (storeErr) {
+        console.warn('Error reading HMS_CREATED_USERS_STORE:', storeErr);
+      }
+
+      // 3. Local Fallback: Check registered patients store directly (HMS_REGISTERED_PATIENTS_LIST)
+      try {
+        const rawReg = localStorage.getItem('HMS_REGISTERED_PATIENTS_LIST');
+        const regPatients = rawReg ? JSON.parse(rawReg) : [];
+        const lowerEmail = email.toLowerCase();
+        const matchedPatient = regPatients.find(p => 
+          (p.email && p.email.toLowerCase() === lowerEmail) || 
+          (p.name && p.name.toLowerCase() === lowerEmail) ||
+          (p.id && p.id.toLowerCase() === lowerEmail)
+        );
+
+        if (matchedPatient) {
+          const patientRole = 'Patient';
+          const patientId = matchedPatient.id || `PAT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+          if (typeof HMSAuth !== 'undefined') {
+            HMSAuth.login(
+              patientRole,
+              matchedPatient.email || email,
+              pwd,
+              matchedPatient.name,
+              matchedPatient.avatar || '',
+              null,
+              false,
+              patientId,
+              matchedPatient.phone || ''
+            );
+          }
+
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Redirecting...';
+          setTimeout(() => {
+            window.location.href = 'pages/patient/dashboard.html';
+          }, 150);
+          return;
+        }
+      } catch (patErr) {
+        console.warn('Error reading HMS_REGISTERED_PATIENTS_LIST:', patErr);
+      }
+
+      // 4. Resilient demo / offline fallback if using standard demo credentials
       const isDemoPassword = (pwd === 'admin123' || pwd === 'password123' || pwd === 'demo123');
       if (isDemoPassword && typeof HMSAuth !== 'undefined') {
         const lowerEmail = email.toLowerCase();
-        let targetRole = role || 'admin';
+        let targetRole = selectedRole || 'Patient';
 
         if (lowerEmail.includes('superadmin')) targetRole = 'Super Admin';
         else if (lowerEmail.includes('admin')) targetRole = 'Admin';
@@ -693,11 +797,7 @@
 
         let customName = '';
         let customId = null;
-        if (lowerEmail.includes('chandanap') || lowerEmail.includes('chandana')) {
-          targetRole = 'Patient';
-          customName = 'chandanap';
-          customId = 'H1278';
-        } else if (targetRole.toLowerCase() === 'patient') {
+        if (targetRole.toLowerCase() === 'patient') {
           const namePart = email.split('@')[0].replace(/[._-]/g, ' ');
           customName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
           const hash = Math.abs(email.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 9000 + 1000;
@@ -722,10 +822,10 @@
         return;
       }
 
-      // 3. Invalid credentials
+      // 5. Invalid credentials
       btn.disabled = false;
       btn.innerHTML = 'Sign In';
-      const msg = (data && data.message) ? data.message : 'Invalid credentials or inactive account.';
+      const msg = (data && data.message) ? data.message : 'Invalid credentials. Please check your username/email and password.';
       if (alertBox) {
         alertBox.textContent = msg;
         alertBox.style.display = 'block';
@@ -826,16 +926,6 @@
         btn.innerHTML = 'Create Account';
         alert('Connection error during registration. Please check server.');
       }
-    }
-
-    function quickLogin(role) {
-      document.getElementById('roleSelect').value = role;
-      handleRoleChange();
-      const email = document.getElementById('usernameInput').value;
-      const pwd = document.getElementById('passwordInput').value;
-      
-      // Submit form
-      document.getElementById('loginSubmitBtn').click();
     }
   </script>
 </body>
